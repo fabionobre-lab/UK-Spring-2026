@@ -1232,9 +1232,20 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		/* Hold together and stay pinned right, whether on the eyebrow's line or
-		   wrapped below it; never compress the ics button or the language pill. */
+		/* Never compress the ics button or the language pill — but on narrow
+		   phones with long labels (esp. Portuguese: "Imprimir / Salvar PDF" +
+		   "Adicionar ao calendário" + the lang pill together overflow a 375px
+		   viewport), let the group wrap onto its own second/third line instead
+		   of overflowing `.hero`'s `overflow: hidden` and clipping the language
+		   pill off-screen entirely. */
+		flex-wrap: wrap;
+		justify-content: flex-end;
 		flex-shrink: 0;
+		/* flex-wrap only wraps once this box is actually constrained narrower
+		   than its children's combined width — without a width cap a
+		   shrink-to-fit flex item just grows to fit its content and overflows
+		   `.hero-row1` instead of wrapping. */
+		max-width: 100%;
 		margin-left: auto;
 	}
 	.ics-btn,

@@ -7,6 +7,14 @@
 			"status": "shipped"
 		},
 		{
+			"id": "edit-in-place",
+			"title": {
+				"en": "Edit a trip directly in the itinerary",
+				"pt": "Editar a viagem direto no roteiro"
+			},
+			"status": "shipped"
+		},
+		{
 			"id": "import",
 			"title": { "en": "Import an itinerary from text", "pt": "Importar um roteiro a partir de texto" },
 			"status": "shipped"

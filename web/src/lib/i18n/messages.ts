@@ -105,6 +105,23 @@ export interface Messages {
 	'tripbar.close': string;
 	'tripbar.edit': string;
 	'tripbar.shared': string;
+	/** In-place editing (Phase 2 WYSIWYG): the mode toggle, the link to the
+	 *  remaining form editor, and the autosave status chip. */
+	'tripbar.doneEditing': string;
+	/** Link out of the settings drawer to the structural editor (Phase 5). */
+	'editor.structureLink': string;
+	'tripbar.settings': string;
+	'edit.hint': string;
+	'save.pending': string;
+	'save.saving': string;
+	'save.saved': string;
+	'save.error': string;
+	'save.invalid': string;
+	'save.invalidBody': string;
+	'save.retry': string;
+	'save.conflict': string;
+	'save.conflictBody': string;
+	'save.reload': string;
 
 	// ── Share panel (SharePanel.svelte) ──
 	'share.heading': string;
@@ -208,6 +225,7 @@ export interface Messages {
 	'common.add': string;
 	'common.cancel': string;
 	'common.undo': string; // toast action label (family convention — same key as Nobria)
+	'common.redo': string;
 	'common.daily': string;
 	'common.hourly': string;
 
@@ -372,6 +390,17 @@ export interface Messages {
 	'block.linkUrlAria': string;
 	'block.linkLabelPlaceholder': string;
 	'block.linkLabelAria': string;
+	/** Per-block inspector (Phase 3 WYSIWYG): the ⋮ trigger on a block in edit
+	 *  mode, and the remove control on a booking-link row. */
+	'block.editDetails': string;
+	'block.removeLinkAria': string;
+	/** Structural editing on the itinerary itself (Phase 4 WYSIWYG): the
+	 *  insert affordance between stops, the add-a-stop button at the end of a
+	 *  day, the inspector's delete action, and its undo toast. */
+	'block.insertBefore': string;
+	'block.addStop': string;
+	'block.delete': string;
+	'block.removed': string;
 	'block.planDiff': string;
 	'block.diffNone': string;
 	'block.diffAdded': string;
@@ -662,6 +691,21 @@ const enGB: Messages = {
 	'tripbar.close': 'Close',
 	'tripbar.edit': 'Edit',
 	'tripbar.shared': 'Shared',
+	'tripbar.doneEditing': 'Done',
+	'editor.structureLink': 'Segments, plan variants and days →',
+	'tripbar.settings': 'Settings',
+	'edit.hint': 'Click any text to edit it. Changes save automatically.',
+	'save.pending': 'Unsaved',
+	'save.saving': 'Saving…',
+	'save.saved': 'Saved',
+	'save.error': 'Not saved',
+	'save.invalid': 'Not saved yet',
+	'save.invalidBody': 'Finish this edit and it will save automatically:',
+	'save.retry': 'Retry',
+	'save.conflict': 'Changed elsewhere',
+	'save.conflictBody':
+		'Someone else edited this trip while you had it open, so saving is paused to avoid overwriting their changes. Copy anything you just wrote, then reload to continue from the latest version.',
+	'save.reload': 'Reload',
 
 	'share.heading': 'Share this trip',
 	'share.linkSharing': 'Link sharing',
@@ -764,6 +808,7 @@ const enGB: Messages = {
 	'common.add': 'Add',
 	'common.cancel': 'Cancel',
 	'common.undo': 'Undo',
+	'common.redo': 'Redo',
 	'common.daily': 'daily',
 	'common.hourly': 'hourly',
 
@@ -922,6 +967,12 @@ const enGB: Messages = {
 	'block.linkUrlAria': 'Booking link URL',
 	'block.linkLabelPlaceholder': 'Label (optional — auto-detected)',
 	'block.linkLabelAria': 'Booking link label',
+	'block.editDetails': 'Edit details',
+	'block.removeLinkAria': 'Remove this booking link',
+	'block.insertBefore': 'Add a stop above this one',
+	'block.addStop': 'Add a stop',
+	'block.delete': 'Delete',
+	'block.removed': 'Stop deleted.',
 	'block.planDiff': 'Plan diff',
 	'block.diffNone': 'none',
 	'block.diffAdded': 'added',
@@ -1208,6 +1259,21 @@ const ptBR: Messages = {
 	'tripbar.close': 'Fechar',
 	'tripbar.edit': 'Editar',
 	'tripbar.shared': 'Compartilhada',
+	'tripbar.doneEditing': 'Concluir',
+	'editor.structureLink': 'Trechos, variantes de plano e dias →',
+	'tripbar.settings': 'Configurações',
+	'edit.hint': 'Clique em qualquer texto para editá-lo. As alterações são salvas automaticamente.',
+	'save.pending': 'Não salvo',
+	'save.saving': 'Salvando…',
+	'save.saved': 'Salvo',
+	'save.error': 'Não salvo',
+	'save.invalid': 'Ainda não salvo',
+	'save.invalidBody': 'Conclua esta edição e ela será salva automaticamente:',
+	'save.retry': 'Tentar de novo',
+	'save.conflict': 'Alterada em outro lugar',
+	'save.conflictBody':
+		'Outra pessoa editou esta viagem enquanto você a mantinha aberta, então o salvamento foi pausado para não sobrescrever as alterações dela. Copie o que você acabou de escrever e recarregue para continuar a partir da versão mais recente.',
+	'save.reload': 'Recarregar',
 
 	'share.heading': 'Compartilhar esta viagem',
 	'share.linkSharing': 'Compartilhar por link',
@@ -1310,6 +1376,7 @@ const ptBR: Messages = {
 	'common.add': 'Adicionar',
 	'common.cancel': 'Cancelar',
 	'common.undo': 'Desfazer',
+	'common.redo': 'Refazer',
 	'common.daily': 'diário',
 	'common.hourly': 'por hora',
 
@@ -1468,6 +1535,12 @@ const ptBR: Messages = {
 	'block.linkUrlAria': 'URL do link de reserva',
 	'block.linkLabelPlaceholder': 'Rótulo (opcional — detectado automaticamente)',
 	'block.linkLabelAria': 'Rótulo do link de reserva',
+	'block.editDetails': 'Editar detalhes',
+	'block.removeLinkAria': 'Remover este link de reserva',
+	'block.insertBefore': 'Adicionar uma parada acima desta',
+	'block.addStop': 'Adicionar uma parada',
+	'block.delete': 'Excluir',
+	'block.removed': 'Parada excluída.',
 	'block.planDiff': 'Diferença de plano',
 	'block.diffNone': 'nenhuma',
 	'block.diffAdded': 'adicionado',

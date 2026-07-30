@@ -41,6 +41,22 @@ export interface TripChromeMessages {
 	/** Localized names for the six cost categories, used as the cost chip's
 	 *  accessible label/tooltip (the chip itself shows an emoji + amount). */
 	costCat: Record<CostCategory, string>;
+	/** Accessible names for the in-place editable fields, also shown as the
+	 *  greyed placeholder while a field is empty (Phase 2 WYSIWYG editing).
+	 *  These follow the trip content language like everything else rendered
+	 *  inside the trip shell — you are editing the trip in the language you are
+	 *  currently reading it in. */
+	edEyebrow: string;
+	edSegTitle: string;
+	edSegSubtitle: string;
+	edDayTitle: string;
+	edDayNote: string;
+	edBanner: string;
+	edBlockTitle: string;
+	edBlockDesc: string;
+	edWarning: string;
+	edNote: string;
+	edFooter: string;
 }
 
 export const tripChrome: Record<'en' | 'pt', TripChromeMessages> = {
@@ -69,7 +85,18 @@ export const tripChrome: Record<'en' | 'pt', TripChromeMessages> = {
 			activities: 'Activities',
 			shopping: 'Shopping',
 			other: 'Other'
-		}
+		},
+		edEyebrow: 'Dates or theme',
+		edSegTitle: 'Segment title',
+		edSegSubtitle: 'Dates or a short subtitle',
+		edDayTitle: 'Untitled day',
+		edDayNote: 'Add a note for this day…',
+		edBanner: 'Banner',
+		edBlockTitle: 'Untitled stop',
+		edBlockDesc: 'Add a description…',
+		edWarning: 'Warning',
+		edNote: 'Note',
+		edFooter: 'Footer'
 	},
 	pt: {
 		maps: 'Abrir no Maps',
@@ -96,7 +123,18 @@ export const tripChrome: Record<'en' | 'pt', TripChromeMessages> = {
 			activities: 'Atividades',
 			shopping: 'Compras',
 			other: 'Outros'
-		}
+		},
+		edEyebrow: 'Datas ou tema',
+		edSegTitle: 'Título do trecho',
+		edSegSubtitle: 'Datas ou um subtítulo curto',
+		edDayTitle: 'Dia sem título',
+		edDayNote: 'Adicionar uma nota para o dia…',
+		edBanner: 'Faixa',
+		edBlockTitle: 'Parada sem título',
+		edBlockDesc: 'Adicionar uma descrição…',
+		edWarning: 'Aviso',
+		edNote: 'Nota',
+		edFooter: 'Rodapé'
 	}
 };
 

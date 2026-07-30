@@ -78,10 +78,24 @@ export const guide: GuideCatalog = {
 						]
 					},
 					{
-						id: 'editor',
-						title: 'Trip editor',
+						id: 'edit-in-place',
+						title: 'Editing a trip in place',
 						body: [
-							"Where you build and change a trip: settings (title, languages, home base), stops (\"segments\" in the editor's own labels), days and the individual blocks of a day's schedule, each with a live preview alongside. Reached from a trip's Edit button — only people with edit access (owners and editors) can get to it.",
+							'Press Edit on a trip and the itinerary itself becomes editable — you change the words where they are, in the finished trip, rather than in a separate form. Click any title, description or note and type. Empty fields show a faint prompt where you can add a description or a note for the day.',
+							'Everything about a stop that is not free text — its time, tags, cost, walking distance, map location and booking links — lives behind the ⋮ button on that stop. It opens a small panel for that one stop (a sheet from the bottom of the screen on a phone), so you are never handed the whole trip as a form. The Find place search fills in the map location for you.',
+							'To change the shape of a day rather than its words: hover between two stops for the + that adds one above, use Add a stop at the end of the day, drag the ⠿ handle on the left rail to reorder, and use Duplicate or Delete inside a stop’s ⋮ panel (which also has arrows for moving a stop up or down without dragging).',
+							'Changes save on their own about a second after you stop typing; a small label near the top shows Unsaved, Saving… and then Saved, so you never have to hunt for a save button. Undo and redo buttons sit beside that label, and Ctrl+Z / ⌘Z works too — inside a text field it undoes your typing, as in any text box; anywhere else it steps back through changes like adding or deleting a stop. Deleting always offers an Undo on the message it shows.',
+							'If a change leaves the trip incomplete — emptying a day of all its stops, say — saving pauses and says so rather than storing something broken. Your edits stay on screen; put a stop back and it saves immediately.',
+							'You are always editing the language you are currently reading. Switch the EN/PT toggle in the trip header and you edit that language instead, leaving the other one untouched.',
+							'If someone else changes the same trip while you have it open, saving pauses and a notice appears rather than overwriting their work — copy anything you have just written, then reload to carry on from the latest version. Press Done to leave edit mode.'
+						]
+					},
+					{
+						id: 'editor',
+						title: 'Trip settings',
+						body: [
+							"Everything that describes the whole trip rather than any one day: title, languages, date format, currency and budget, the home base and the tag list. Press Settings on a trip and it opens as a panel over the itinerary, saving as you go like every other edit. Only people with edit access (owners and editors) see it.",
+							"A link at the bottom of that panel leads to the structural editor, which is where segments, plan variants and days themselves are added, reordered and removed — a bigger kind of change than editing a day, and still its own page with a live preview and its own Save button.",
 							"A stop can hold more than one plan — alternate versions of the same days, for example a rainy-day option alongside the usual one. Anyone viewing the trip can switch between a stop's plans using the plan tabs in the trip view."
 						]
 					},
@@ -316,10 +330,24 @@ export const guide: GuideCatalog = {
 						]
 					},
 					{
-						id: 'editor',
-						title: 'Editor de viagem',
+						id: 'edit-in-place',
+						title: 'Editar uma viagem no próprio roteiro',
 						body: [
-							'Onde você monta e altera uma viagem: configurações (título, idiomas, base de origem), paradas ("trechos" nos próprios rótulos do editor), dias e os blocos individuais da programação de um dia, cada um com uma pré-visualização ao vivo ao lado. Acessado pelo botão Editar de uma viagem — só quem tem acesso de edição (donos e editores) consegue chegar até lá.',
+							'Toque em Editar em uma viagem e o próprio roteiro fica editável — você altera o texto onde ele está, na viagem pronta, em vez de em um formulário separado. Clique em qualquer título, descrição ou nota e digite. Campos vazios mostram uma indicação discreta onde você pode adicionar uma descrição ou uma nota para o dia.',
+							'Tudo em uma parada que não é texto livre — horário, etiquetas, custo, distância a pé, local no mapa e links de reserva — fica atrás do botão ⋮ daquela parada. Ele abre um painel pequeno só daquela parada (uma folha que sobe pela base da tela no celular), então você nunca recebe a viagem inteira como formulário. A busca Encontrar lugar preenche o local no mapa para você.',
+							'Para mudar a estrutura de um dia, e não o texto: passe o cursor entre duas paradas para ver o + que adiciona uma acima, use Adicionar uma parada no fim do dia, arraste a alça ⠿ na régua à esquerda para reordenar, e use Duplicar ou Excluir dentro do painel ⋮ da parada (que também tem setas para mover a parada para cima ou para baixo sem arrastar).',
+							'As alterações são salvas sozinhas cerca de um segundo depois que você para de digitar; uma etiqueta pequena no topo mostra Não salvo, Salvando… e depois Salvo, então você nunca precisa procurar um botão de salvar. Os botões de desfazer e refazer ficam ao lado dessa etiqueta, e Ctrl+Z / ⌘Z também funciona — dentro de um campo de texto ele desfaz a digitação, como em qualquer caixa de texto; fora dele, volta um passo em mudanças como adicionar ou excluir uma parada. Excluir sempre oferece Desfazer na mensagem que aparece.',
+							'Se uma alteração deixar a viagem incompleta — esvaziar um dia de todas as paradas, por exemplo — o salvamento é pausado e avisa, em vez de guardar algo quebrado. Suas edições continuam na tela; devolva uma parada e ela é salva na hora.',
+							'Você sempre edita o idioma que está lendo no momento. Troque o botão EN/PT no cabeçalho da viagem e passa a editar aquele idioma, sem mexer no outro.',
+							'Se outra pessoa alterar a mesma viagem enquanto você a mantém aberta, o salvamento é pausado e aparece um aviso em vez de sobrescrever o trabalho dela — copie o que você acabou de escrever e recarregue para continuar a partir da versão mais recente. Toque em Concluir para sair do modo de edição.'
+						]
+					},
+					{
+						id: 'editor',
+						title: 'Configurações da viagem',
+						body: [
+							'Tudo que descreve a viagem inteira, e não um dia específico: título, idiomas, formato de data, moeda e orçamento, a base de origem e a lista de etiquetas. Toque em Configurações em uma viagem e isso abre como um painel sobre o roteiro, salvando conforme você mexe, como qualquer outra edição. Só quem tem acesso de edição (donos e editores) vê o painel.',
+							'Um link no rodapé desse painel leva ao editor de estrutura, onde os trechos, as variantes de plano e os próprios dias são adicionados, reordenados e removidos — um tipo de mudança maior do que editar um dia, e que continua tendo página própria, com pré-visualização ao vivo e botão de salvar.',
 							'Uma parada pode ter mais de um plano — versões alternativas dos mesmos dias, por exemplo uma opção para dia de chuva ao lado da opção normal. Quem visualiza a viagem pode alternar entre os planos de uma parada usando as abas de plano na visualização da viagem.'
 						]
 					},

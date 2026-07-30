@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { untrack, onDestroy } from 'svelte';
-	import { fly, slide } from 'svelte/transition';
+	import { slide } from 'svelte/transition';
 	import { prefersReducedMotion } from 'svelte/motion';
 	import {
 		type Trip,
@@ -9,6 +9,7 @@
 		type Day,
 		type SegWeather,
 		type ChecklistItem,
+		type PhotoSpot,
 		loc,
 		localeFor,
 		dayLabel,
@@ -18,13 +19,9 @@
 		tripIsPast,
 		routePlaces,
 		routeUrl,
-		dayKmTotal,
-		dayCostTotal,
 		tripCostTotal,
-		type CostCategory,
 		fetchSegmentWeather,
 		safeUrl,
-		linkLabel,
 		buildIcs,
 		tripTimezone,
 		isoDateInTZ,
@@ -32,15 +29,16 @@
 		minutesSinceMidnightInTZ,
 		parseBlockTimeMinutes
 	} from './trip-engine';
-	import DayMap, { type MapStop, type PhotoStop } from './DayMap.svelte';
+	import type { MapStop, PhotoStop } from './DayMap.svelte';
 	import PhotoLightbox from './PhotoLightbox.svelte';
+	import TripDay from './trip/TripDay.svelte';
+	import PhotoStrip from './trip/PhotoStrip.svelte';
+	import EditableText from './trip/EditableText.svelte';
 	import { tripChrome } from './i18n/tripChrome';
 	import { photoUrl, type TripPhoto } from './photos';
 	import { getNow } from './now';
-	import { formatTemp, walkMinutes, formatMoney } from './format';
-	import { isOnline } from './online.svelte';
+	import { formatMoney } from './format';
 	import { setTripNav, type TripNavVM } from './nav/tripNav.svelte';
-	import Tip from './Tip.svelte';
 
 	// trip is fixed for the lifetime of a mounted TripView (the page remounts
 	// per trip id), so these initial reads are intentionally non-reactive.
@@ -51,9 +49,10 @@
 		photosEditable = false,
 		photoToken,
 		onphotoschanged,
-		checklistEditable = false,
-		tripUpdatedAt,
-		printHref
+		printHref,
+		edit = false,
+		onedit,
+		onundo
 	}: {
 		trip: Trip;
 		lang?: string;
@@ -67,20 +66,26 @@
 		/** Called after a photo was moved/deleted from the lightbox, so the
 		 *  owner of `photos` can refetch. */
 		onphotoschanged?: () => void;
-		/** Whether checklist checkbox toggles persist to the server (true only
-		 *  for a real trip's owner/editor, via /trips/[id]). When false — the
-		 *  /demo route, public /s/[token] share links, viewers, and the editor's
-		 *  live preview — toggles are visual-only local state that resets on
-		 *  reload (Phase 6 item 2). */
-		checklistEditable?: boolean;
-		/** The trip's `updated_at` as loaded by the page, for optimistic
-		 *  concurrency on checklist-toggle PUTs. Irrelevant when
-		 *  `checklistEditable` is false. */
-		tripUpdatedAt?: string;
 		/** Link to the standalone print/PDF document for this trip (e.g.
 		 *  `/trips/[id]/print?lang=…`). Renders a "Print / Save as PDF" action in
 		 *  the hero when set; omitted where no such route exists (editor preview). */
 		printHref?: string;
+		/** In-place editing (Phase 2 WYSIWYG): text fields in the hero, the day
+		 *  header and every block become contenteditable where they render. */
+		edit?: boolean;
+		/** Notifies the owner of `trip` that the doc was mutated in place, so it
+		 *  can persist it (the trip page debounces these into one PUT — see
+		 *  lib/trip/autosave.svelte.ts).
+		 *
+		 *  Its presence is also what makes checklist ticks persistent: with a
+		 *  handler, a tick mutates `trip` and is saved by the page; without one —
+		 *  the /demo route, public /s/[token] links, viewers, the editor's live
+		 *  preview — ticks stay local state that resets on reload, exactly as
+		 *  before (Phase 6 item 2). */
+		onedit?: (structural?: boolean) => void;
+		/** Step the document history back — surfaced as the Undo action on the
+		 *  toast raised when a stop is deleted. */
+		onundo?: () => void;
 	} = $props();
 	let planBySeg = $state<Record<string, string>>(
 		untrack(() => Object.fromEntries(trip.segments.map((s) => [s.id, s.defaultPlan ?? s.plans[0].id])))
@@ -89,21 +94,26 @@
 	let wikiImgs = $state<Record<string, string | null>>({});
 
 	// ── Packing/pre-trip checklist toggles (Phase 6 item 2) ──
-	// Rendered `done` state is `checklistOverrides[key] ?? item.done` so a
-	// toggle is instant regardless of whether it persists. Real editors' PUTs
-	// send the whole trip doc (the only mutation mechanism the API has), keyed
-	// by (segment id, plan id, day date, block index, item index) since blocks
-	// have no id of their own.
+	// Two modes, chosen by whether the caller can persist edits at all:
+	//
+	//  - With `onedit` (the trip page, owner/editor): the tick mutates the live
+	//    doc and the page saves it through the same debounced autosave as every
+	//    inline text edit. Phase 2 replaced a second, independent PUT here —
+	//    two writers on one trip meant two `updated_at` baselines racing each
+	//    other into spurious 409s the moment both were used in one session.
+	//  - Without it (/demo, public /s/[token] links, viewers, the editor's live
+	//    preview): ticks are local-only overrides that reset on reload.
+	//
+	// Overrides are keyed by (segment id, plan id, day date, block index, item
+	// index) since blocks carry no id of their own.
 	let checklistOverrides = $state<Record<string, boolean>>({});
-	let checklistSaving = $state<Record<string, boolean>>({});
-	let checklistBaseUpdatedAt = $state(untrack(() => tripUpdatedAt));
 	function checklistKey(seg: Segment, plan: Plan, day: Day, bi: number, ii: number): string {
 		return `${seg.id}|${plan.id}|${day.date}|${bi}|${ii}`;
 	}
 	function checklistDone(seg: Segment, plan: Plan, day: Day, bi: number, ii: number, item: ChecklistItem): boolean {
 		return checklistOverrides[checklistKey(seg, plan, day, bi, ii)] ?? item.done;
 	}
-	async function toggleChecklistItem(
+	function toggleChecklistItem(
 		seg: Segment,
 		plan: Plan,
 		day: Day,
@@ -111,37 +121,18 @@
 		item: ChecklistItem,
 		ii: number
 	) {
-		const key = checklistKey(seg, plan, day, bi, ii);
 		const next = !checklistDone(seg, plan, day, bi, ii, item);
-		checklistOverrides = { ...checklistOverrides, [key]: next };
-		if (!checklistEditable) return; // demo / share link / viewer / editor preview: local only
-		checklistSaving = { ...checklistSaving, [key]: true };
-		try {
-			const clone = structuredClone($state.snapshot(trip)) as Trip;
-			const targetItem = clone.segments
-				.find((s) => s.id === seg.id)
-				?.plans.find((p) => p.id === plan.id)
-				?.days.find((d) => d.date === day.date)?.blocks[bi]?.checklist?.items[ii];
-			if (!targetItem) return;
-			targetItem.done = next;
-			const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-			if (checklistBaseUpdatedAt) headers['x-base-updated-at'] = checklistBaseUpdatedAt;
-			const res = await fetch(`/api/trips/${trip.id}`, {
-				method: 'PUT',
-				headers,
-				body: JSON.stringify(clone)
-			});
-			if (res.ok) {
-				const data = (await res.json()) as { updatedAt?: string };
-				if (data.updatedAt) checklistBaseUpdatedAt = data.updatedAt;
-			} else {
-				checklistOverrides = { ...checklistOverrides, [key]: !next };
-			}
-		} catch {
-			checklistOverrides = { ...checklistOverrides, [key]: !next };
-		} finally {
-			checklistSaving = { ...checklistSaving, [key]: false };
+		if (onedit) {
+			// `item` is the live object inside `trip` (a $state draft owned by the
+			// page whenever onedit is wired), so this mutation is what gets saved.
+			item.done = next;
+			onedit();
+			return;
 		}
+		checklistOverrides = {
+			...checklistOverrides,
+			[checklistKey(seg, plan, day, bi, ii)]: next
+		};
 	}
 
 	const isPast = untrack(() => tripIsPast(trip));
@@ -152,14 +143,6 @@
 	// ── Budget (Phase 6 budget) ──
 	// Money helper bound to the trip's currency + the content-language locale.
 	const money = (n: number) => formatMoney(n, trip.currency, localeFor(trip, lang));
-	const CATEGORY_EMOJI: Record<CostCategory, string> = {
-		lodging: '🛏️',
-		food: '🍽️',
-		transport: '🚕',
-		activities: '🎟️',
-		shopping: '🛍️',
-		other: '💷'
-	};
 	// Whole-trip estimate, plan-aware so switching plans re-totals (see
 	// tripCostTotal). Recomputes on plan changes via the planBySeg dependency.
 	const estTotal = $derived(tripCostTotal(trip, planBySeg));
@@ -379,14 +362,6 @@
 	   instead of t(). See lib/i18n/tripChrome.ts. */
 	const uiText = $derived(tripChrome[lang === 'pt' ? 'pt' : 'en']);
 
-	// Offline-stale-weather hint (Phase 6 item 5, audit weakest-point 10):
-	// weather has no persistent cache (see SegWeather.fetchedAt's doc comment
-	// in trip-engine.ts) — while offline, a fetch can't have just succeeded,
-	// so any badge rendered at all is necessarily held-over/static data. The
-	// gate is simply "are we offline right now", checked alongside the
-	// existing wx/badge presence checks at each render site.
-	const offline = $derived(!isOnline());
-
 	function setLang(l: string) {
 		lang = l;
 	}
@@ -507,6 +482,13 @@
 			}
 		}
 	});
+	/** Thumbnail for a photo spot: the fetched Wikipedia image (or the spot's
+	 *  own fallback), URL-checked. Handed to TripBlock, which owns the markup
+	 *  but not this cache. */
+	function spotImg(sp: PhotoSpot): string | undefined {
+		const k = spotKey(sp);
+		return k ? safeUrl(wikiImgs[k] ?? undefined) : undefined;
+	}
 
 	// Inline CSS-variable overrides from a segment's custom themeColors.
 	const themeStyle = $derived.by(() => {
@@ -543,11 +525,6 @@
 		}
 		return out;
 	});
-	const mapAriaLabel = $derived(
-		lang === 'pt'
-			? `Mapa do dia, ${dayMapStops.length} paradas`
-			: `Day map, ${dayMapStops.length} stops`
-	);
 
 	// ── Linked Google Photos ──
 	// Photos come pre-placed (segment/plan/day/block) by capture time; this
@@ -674,7 +651,9 @@
 	<div class="hero">
 		<div class="hero-inner">
 			<div class="hero-row1">
-				<div class="trip-eyebrow">{L(trip.eyebrow)}</div>
+				<div class="trip-eyebrow">
+					<EditableText bind:value={trip.eyebrow} {lang} {edit} {onedit} label={uiText.edEyebrow} />
+				</div>
 				<div class="hero-actions">
 					{#if printHref}
 						<a class="ics-btn" href={printHref} aria-label={uiText.printPdf}>
@@ -697,8 +676,21 @@
 					{/if}
 				</div>
 			</div>
-			<div class="trip-title">{L(current?.seg.title)}</div>
-			<div class="trip-sub">{L(current?.seg.subtitle)}</div>
+			<!-- The hero shows the CURRENT segment's title/subtitle, so editing here
+			     edits that segment. Both fall back to the plain read rendering when
+			     there is no current day (an empty draft in the editor preview). -->
+			{#if current}
+				{@const cur = current.seg}
+				<div class="trip-title">
+					<EditableText bind:value={cur.title} {lang} {edit} {onedit} label={uiText.edSegTitle} />
+				</div>
+				<div class="trip-sub">
+					<EditableText bind:value={cur.subtitle} {lang} {edit} {onedit} label={uiText.edSegSubtitle} />
+				</div>
+			{:else}
+				<div class="trip-title"></div>
+				<div class="trip-sub"></div>
+			{/if}
 			{#if current && current.seg.plans.length > 1}
 				<div class="vtabs">
 					{#each current.seg.plans as p (p.id)}
@@ -789,279 +781,47 @@
 			{@const seg = current.seg}
 			{@const plan = current.plan}
 			{@const day = current.day}
-			{@const wx = daySummary(seg, day)}
-			{@const km = dayKmTotal(day)}
-			{@const dayCost = dayCostTotal(day)}
 			{#key clampedIdx}
-				<div
-					class="day-content"
-					in:fly={{
-						y: prefersReducedMotion.current ? 0 : 8,
-						duration: prefersReducedMotion.current ? 0 : 180
-					}}
-				>
-					<div class="day-hdr">
-						<div class="dh-in">
-							<div class="dh-eye">{dayLabel(day.date, localeFor(trip, lang))}</div>
-							<div class="dh-title">{L(day.title)}</div>
-							{#if L(day.note)}<div class="dh-note">{L(day.note)}</div>{/if}
-							{#if wx || km || dayCost}
-								{@const dayWalkMin = km ? walkMinutes(km) : null}
-								<div class="wx-hdr">
-									{#if wx}
-										<div class="wx-hdr-item" aria-hidden="true">{wx.emoji}</div>
-										<div class="wx-hdr-item">↑{formatTemp(wx.hi)}</div>
-										<div class="wx-hdr-item">↓{formatTemp(wx.lo)}</div>
-										{#if offline}
-											<Tip text={uiText.wxOfflineHint}>
-												<div class="wx-hdr-item wx-hdr-offline">
-													{uiText.wxOffline}
-												</div>
-											</Tip>
-										{/if}
-									{/if}
-									{#if km}
-										<div class="wx-hdr-item wx-km">
-											🦶 ~{km.toFixed(1)} km{#if dayWalkMin} · ~{dayWalkMin} {uiText.walkSuffix}{/if}
-										</div>
-									{/if}
-									{#if dayCost}
-										<div class="wx-hdr-item wx-cost">💷 {money(dayCost)}</div>
-									{/if}
-								</div>
-							{/if}
-							{#if L(day.banner)}<div class="bday-strip">{L(day.banner)}</div>{/if}
-						</div>
-					</div>
-
-					<aside class="day-aside">
-						{#if dayMapStops.length >= 2}
-							<DayMap
-								stops={dayMapStops}
-								ariaLabel={mapAriaLabel}
-								photoStops={photoMapStops}
-								onphotostopclick={openBlockPhotos}
-							/>
-						{/if}
-
-						{#if routeForDay}
-							<!-- Mobile-only compact stand-in for the (hidden) route stepper:
-							     preserves the one thing the card uniquely offers, the Maps link. -->
-							<a href={routeForDay.url} target="_blank" rel="noopener noreferrer" class="maps-link-btn">
-								<svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" /><circle cx="12" cy="9" r="2.5" /></svg>
-								{uiText.openRoute}
-							</a>
-
-							<!-- Full Day-Route stepper: desktop only (hidden on mobile). -->
-							<a href={routeForDay.url} target="_blank" rel="noopener noreferrer" class="route-card">
-								<div class="route-hdr">
-									<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8" /><path d="M17 7h4v4" /></svg>
-									{uiText.dayRoute}
-								</div>
-								<div class="route-stops">
-									{#each routeForDay.places as p, i (i)}
-										{#if i > 0}<div class="route-connector"></div>{/if}
-										<div class="route-stop">
-											<div class="route-num">{i + 1}</div>
-											<div class="route-name">{p.name}</div>
-										</div>
-									{/each}
-								</div>
-								<div class="route-open">
-									<svg aria-hidden="true" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" /><circle cx="12" cy="9" r="2.5" /></svg>
-									{uiText.openRoute}
-								</div>
-							</a>
-						{/if}
-					</aside>
-
-					<div class="tl">
-						{#each day.blocks as b, bi (bi)}
-							{@const badge = blockBadge(seg, day, b.time)}
-							{@const isNext = isToday && nowMarkerIdx === bi}
-							{#if isToday && nowMarkerIdx === bi}
-								<div class="tb tb-now" aria-hidden="true" bind:this={nowMarkerEl}>
-									<div class="tb-left"></div>
-									<div class="tb-body tb-now-body">
-										<div class="tb-now-dot"></div>
-										<div class="tb-now-line"></div>
-										<span class="tb-now-label">{uiText.now} · {nowLabel}</span>
-									</div>
-								</div>
-							{/if}
-							<div class="tb">
-								<div class="tb-left">
-									<div class="tb-time">
-										{b.time}
-										{#if badge && !isPast}
-											{#if offline}
-												<Tip text={uiText.wxOfflineHint}>
-													<div class="wx">
-														<span aria-hidden="true">{badge.emoji}</span> {formatTemp(badge.temp)}
-														<span class="wx-offline">{uiText.wxOffline}</span>
-													</div>
-												</Tip>
-											{:else}
-												<div class="wx">
-													<span aria-hidden="true">{badge.emoji}</span> {formatTemp(badge.temp)}
-												</div>
-											{/if}
-										{/if}
-									</div>
-									<div class="tb-dot-col">
-										<div class="tb-dot" class:tb-dot-next={isNext} style="background:{b.dotColor || 'var(--text-muted)'}"></div>
-										{#if bi < day.blocks.length - 1}<div class="tb-line"></div>{/if}
-									</div>
-								</div>
-								<div class="tb-body">
-									<div class="tb-title-row">
-										<div class="tb-title" class:tb-title-next={isNext}>{L(b.title)}</div>
-										{#if b.mapsUrl}
-											<a
-												class="map-icon-btn"
-												href={safeUrl(b.mapsUrl)}
-												target="_blank"
-												rel="noopener noreferrer"
-												aria-label={uiText.maps}
-												title={uiText.maps}
-											>
-												<span class="map-icon-circle">
-													<svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" /><circle cx="12" cy="9" r="2.5" /></svg>
-												</span>
-											</a>
-										{/if}
-									</div>
-									{#if b.tags?.length}
-										<div class="tb-tags">
-											{#each b.tags as key (key)}
-												{@const tag = trip.tags?.[key]}
-												{#if tag}<span class="tb-tag {tag.style ?? 'logistics'}">{L(tag.label)}</span>{/if}
-											{/each}
-										</div>
-									{/if}
-									{#if L(b.description)}<div class="tb-meta">{L(b.description)}</div>{/if}
-									{#if b.km}
-										{@const blockWalkMin = walkMinutes(b.km)}
-										<div class="km-tag">🚶 ~{b.km} km{#if blockWalkMin} · ~{blockWalkMin} {uiText.walkSuffix}{/if}</div>
-									{/if}
-									{#if b.cost}
-										{@const cat = b.cost.category}
-										<div class="cost-tag">
-											<span aria-hidden="true">{cat ? CATEGORY_EMOJI[cat] : '💷'}</span>
-											{money(b.cost.amount)}{#if cat}<span class="cost-cat"> · {uiText.costCat[cat]}</span>{/if}
-										</div>
-									{/if}
-									{#if b.links?.length}
-										<div class="tb-links">
-											{#each b.links as lk, i (i)}
-												{@const href = safeUrl(lk.url)}
-												{#if href}
-													<a class="tb-link" {href} target="_blank" rel="noopener noreferrer">
-														<svg aria-hidden="true" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>
-														{linkLabel(lk)}
-													</a>
-												{/if}
-											{/each}
-										</div>
-									{/if}
-									{#if L(b.warning)}<div class="tb-warn">{L(b.warning)}</div>{/if}
-									{#if L(b.note)}<div class="tb-note">{L(b.note)}</div>{/if}
-									{#if b.checklist}
-										{@const doneCount = b.checklist.items.filter((it, ii) =>
-											checklistDone(seg, plan, day, bi, ii, it)
-										).length}
-										<div class="tb-checklist">
-											<div class="tb-checklist-hdr">
-												<span class="tb-checklist-title">{L(b.checklist.title)}</span>
-												<span class="tb-checklist-progress">{doneCount}/{b.checklist.items.length}</span>
-											</div>
-											<ul class="tb-checklist-items">
-												{#each b.checklist.items as item, ii (ii)}
-													{@const itemDone = checklistDone(seg, plan, day, bi, ii, item)}
-													{@const itemKey = checklistKey(seg, plan, day, bi, ii)}
-													<li class="tb-checklist-item" class:done={itemDone}>
-														<label>
-															<input
-																type="checkbox"
-																checked={itemDone}
-																disabled={checklistSaving[itemKey]}
-																onchange={() => toggleChecklistItem(seg, plan, day, bi, item, ii)}
-															/>
-															<span class="tb-checklist-text">{L(item.text)}</span>
-														</label>
-													</li>
-												{/each}
-											</ul>
-										</div>
-									{/if}
-									{#if b.photoSpots?.length}
-										<div class="tb-photos">
-											{#each b.photoSpots as sp (sp)}
-												{@const key = spotKey(sp)}
-												<a href={safeUrl(sp.mapsUrl)} target="_blank" rel="noopener noreferrer" class="ps-card">
-													{#if key && safeUrl(wikiImgs[key] ?? undefined)}
-														<img src={safeUrl(wikiImgs[key] ?? undefined)} class="ps-thumb" alt={sp.name} />
-													{:else}
-														<div class="ps-thumb ps-placeholder" aria-hidden="true"></div>
-													{/if}
-													<span class="ps-label">{sp.name}</span>
-												</a>
-											{/each}
-										</div>
-									{/if}
-									{#if b.diff && plan.diffLabels?.[b.diff.kind]}
-										<div class="diff-{b.diff.kind}">{L(plan.diffLabels[b.diff.kind])}{L(b.diff.reason)}</div>
-									{/if}
-									{#if photosByBlock.get(bi)?.length}
-										{@const bp = photosByBlock.get(bi) ?? []}
-										<div class="ph-strip">
-											{#each bp as p, pi (p.id)}
-												<button class="ph-thumb" onclick={() => openLightbox(bp, pi)} aria-label={uiText.openPhoto}>
-													<img src={photoUrl(trip.id, p.id, 'thumb', photoToken)} alt="" loading="lazy" />
-												</button>
-											{/each}
-										</div>
-									{/if}
-								</div>
-							</div>
-						{/each}
-						{#if isToday && day.blocks.length > 0 && nowMarkerIdx === day.blocks.length}
-							<div class="tb tb-now tb-now-end" aria-hidden="true" bind:this={nowMarkerEl}>
-								<div class="tb-left"></div>
-								<div class="tb-body tb-now-body">
-									<div class="tb-now-dot"></div>
-									<div class="tb-now-line"></div>
-									<span class="tb-now-label">{uiText.now} · {nowLabel}</span>
-								</div>
-							</div>
-						{/if}
-					</div>
-					{#if dayLevelPhotos.length}
-						<div class="day-photos">
-							<div class="dp-title">{uiText.photos}</div>
-							<div class="ph-strip">
-								{#each dayLevelPhotos as p, pi (p.id)}
-									<button class="ph-thumb" onclick={() => openLightbox(dayLevelPhotos, pi)} aria-label={uiText.openPhoto}>
-										<img src={photoUrl(trip.id, p.id, 'thumb', photoToken)} alt="" loading="lazy" />
-									</button>
-								{/each}
-							</div>
-						</div>
-					{/if}
-					{#if L(seg.footer)}<div class="footer">{L(seg.footer)}</div>{/if}
-				</div>
+				<TripDay
+					{trip}
+					{lang}
+					{seg}
+					{plan}
+					{day}
+					wx={daySummary(seg, day)}
+					{isToday}
+					{nowMarkerIdx}
+					{nowLabel}
+					bind:nowMarkerEl
+					mapStops={dayMapStops}
+					{photoMapStops}
+					{routeForDay}
+					badgeFor={(time) => blockBadge(seg, day, time)}
+					{photosByBlock}
+					{dayLevelPhotos}
+					{photoToken}
+					{spotImg}
+					checklistDone={(bi, ii, item) => checklistDone(seg, plan, day, bi, ii, item)}
+					checklistKeyFor={(bi, ii) => checklistKey(seg, plan, day, bi, ii)}
+					onToggleChecklist={(bi, item, ii) => toggleChecklistItem(seg, plan, day, bi, item, ii)}
+					onopenlightbox={openLightbox}
+					onphotostopclick={openBlockPhotos}
+					{edit}
+					{onedit}
+					{onundo}
+				/>
 			{/key}
 		{/if}
 		{#if unmatchedPhotos.length && photosEditable}
 			<div class="day-photos day-photos-unmatched">
 				<div class="dp-title">{uiText.unmatchedPhotos}</div>
-				<div class="ph-strip">
-					{#each unmatchedPhotos as p, pi (p.id)}
-						<button class="ph-thumb" onclick={() => openLightbox(unmatchedPhotos, pi)} aria-label={uiText.openPhoto}>
-							<img src={photoUrl(trip.id, p.id, 'thumb', photoToken)} alt="" loading="lazy" />
-						</button>
-					{/each}
-				</div>
+				<PhotoStrip
+					photos={unmatchedPhotos}
+					tripId={trip.id}
+					{photoToken}
+					openLabel={uiText.openPhoto}
+					onopen={(pi) => openLightbox(unmatchedPhotos, pi)}
+				/>
 			</div>
 		{/if}
 	</div>
@@ -1592,599 +1352,6 @@
 	.scroll-area {
 		padding-bottom: 20px;
 	}
-	.day-hdr {
-		margin: 10px 13px 0;
-		background: var(--hero-bg);
-		border-radius: var(--radius-lg);
-		/* Slimmed: tighter padding + smaller title + a single compact weather row
-		   trims the header from ~107px toward ~80px, so more of the timeline is
-		   visible on first paint. Keeps the theme colour band identity. */
-		padding: 8px 14px 8px;
-	}
-	.dh-eye {
-		font-size: 9px;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		color: var(--hero-eyebrow);
-		opacity: 0.7;
-		margin-bottom: 1px;
-	}
-	.dh-title {
-		font-family: 'Source Serif 4', serif;
-		font-size: 16px;
-		color: #fff;
-		font-weight: 700;
-		line-height: 1.15;
-	}
-	.dh-note {
-		font-size: 11px;
-		color: rgba(255, 255, 255, 0.55);
-		margin-top: 3px;
-		line-height: 1.4;
-	}
-	.bday-strip {
-		background: var(--heather);
-		border-radius: var(--radius-md);
-		padding: 6px 11px;
-		margin-top: 8px;
-		font-family: 'Source Serif 4', serif;
-		font-style: italic;
-		font-size: 12px;
-		color: #fff;
-		line-height: 1.3;
-	}
-	.wx-hdr {
-		display: flex;
-		gap: 8px;
-		flex-wrap: nowrap;
-		padding: 0;
-		font-size: 10.5px;
-		color: rgba(255, 255, 255, 0.85);
-		margin-top: 4px;
-	}
-	.wx-hdr-item {
-		display: flex;
-		align-items: center;
-		gap: 3px;
-	}
-	.wx-km {
-		color: #cfe0b8;
-		font-weight: 600;
-		padding-left: 8px;
-		border-left: 1px solid rgba(255, 255, 255, 0.25);
-	}
-	.wx-cost {
-		color: #f0d692;
-		font-weight: 600;
-		padding-left: 8px;
-		border-left: 1px solid rgba(255, 255, 255, 0.25);
-		font-variant-numeric: tabular-nums;
-	}
-	/* Offline-stale-weather hint (Phase 6 item 5): same muted white already
-	   used for .dh-note in this hero-photo context, not a new token. */
-	.wx-hdr-offline {
-		color: rgba(255, 255, 255, 0.55);
-	}
-	.tl {
-		padding: 2px 13px 0;
-	}
-	.tb {
-		display: flex;
-	}
-	.tb-left {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		width: 50px;
-		flex-shrink: 0;
-		padding-top: 12px;
-	}
-	.tb-time {
-		font-size: 10px;
-		font-weight: 500;
-		color: var(--text-muted);
-		text-align: center;
-		line-height: 1.2;
-		font-variant-numeric: tabular-nums;
-	}
-	.tb-dot-col {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		margin-top: 4px;
-		flex: 1;
-	}
-	.tb-dot {
-		width: 10px;
-		height: 10px;
-		border-radius: 50%;
-		flex-shrink: 0;
-		border: 2px solid var(--surface);
-		box-shadow: 0 0 0 1px var(--hairline);
-	}
-	.tb-line {
-		width: 1.5px;
-		flex: 1;
-		min-height: 14px;
-		background: var(--hairline-strong);
-		margin-top: 2px;
-	}
-	.tb-dot-next {
-		box-shadow:
-			0 0 0 3px color-mix(in srgb, var(--accent-text) 25%, transparent),
-			0 0 0 1px var(--accent-text);
-	}
-	/* The "now" row: a quiet accent rule across the timeline with a small dot
-	   on the rail and a tiny HH:MM label, sitting between the last started
-	   block and the next upcoming one. */
-	.tb-now .tb-left {
-		width: 50px;
-		flex-shrink: 0;
-	}
-	.tb-now-body {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		padding: 0 0 0 5px;
-		min-height: 16px;
-		border-bottom: none;
-	}
-	.tb-now-dot {
-		width: 7px;
-		height: 7px;
-		border-radius: 50%;
-		background: var(--accent-text);
-		flex-shrink: 0;
-		box-shadow: 0 0 0 2px var(--surface);
-	}
-	.tb-now-line {
-		flex: 1;
-		height: 1.5px;
-		background: var(--accent-text);
-		opacity: 0.55;
-		margin: 0 6px;
-	}
-	.tb-now-label {
-		font-size: 9px;
-		letter-spacing: 0.03em;
-		color: var(--accent-text);
-		white-space: nowrap;
-		font-variant-numeric: tabular-nums;
-		flex-shrink: 0;
-	}
-	.tb-body {
-		flex: 1;
-		padding: 11px 0 11px 9px;
-		border-bottom: 1px solid var(--hairline-strong);
-	}
-	.tb:last-child .tb-body {
-		border-bottom: none;
-	}
-	.tb-title-row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 6px;
-	}
-	.tb-title {
-		font-family: 'Source Serif 4', serif;
-		font-size: 14px;
-		font-weight: 500;
-		color: var(--text);
-		line-height: 1.3;
-	}
-	.tb-title-next {
-		color: var(--accent-text);
-		font-weight: 700;
-	}
-	/* Quiet "open in maps" affordance: a small stone-colored ghost circle on
-	   the block's title row. The anchor itself is the full 44px touch target
-	   (padding, not visual size) — the visible circle inside it is smaller. */
-	.map-icon-btn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 44px;
-		height: 44px;
-		flex-shrink: 0;
-		color: var(--text-muted);
-		text-decoration: none;
-	}
-	.map-icon-circle {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 24px;
-		height: 24px;
-		border-radius: 50%;
-		border: 1px solid var(--hairline-strong);
-		background: transparent;
-	}
-	.map-icon-btn:hover .map-icon-circle,
-	.map-icon-btn:focus-visible .map-icon-circle {
-		border-color: var(--accent-text);
-		color: var(--accent-text);
-		background: color-mix(in srgb, var(--accent-text) 8%, transparent);
-	}
-	@media (prefers-reduced-motion: no-preference) {
-		.map-icon-circle {
-			transition:
-				border-color 0.15s ease,
-				background 0.15s ease,
-				color 0.15s ease,
-				transform 0.1s ease;
-		}
-		.map-icon-btn:active .map-icon-circle {
-			transform: scale(0.9);
-		}
-	}
-	.tb-tags {
-		display: flex;
-		gap: 4px;
-		flex-wrap: wrap;
-		margin: 4px 0 3px;
-	}
-	.tb-tag {
-		font-size: 10px;
-		padding: 2px 7px;
-		border-radius: var(--radius-pill);
-		white-space: nowrap;
-	}
-	.tb-tag.sight {
-		background: var(--chip-sight-bg);
-		color: var(--chip-sight-fg);
-	}
-	.tb-tag.food {
-		background: var(--chip-food-bg);
-		color: var(--chip-food-fg);
-	}
-	.tb-tag.logistics {
-		background: var(--chip-logistics-bg);
-		color: var(--chip-logistics-fg);
-	}
-	.tb-tag.booking {
-		background: var(--chip-booking-bg);
-		color: var(--chip-booking-fg);
-	}
-	.tb-tag.fullday {
-		background: var(--chip-fullday-bg);
-		color: var(--chip-fullday-fg);
-	}
-	.tb-tag.birthday {
-		background: var(--chip-bday-grad);
-		color: var(--chip-bday-fg);
-		font-weight: 500;
-	}
-	.tb-meta {
-		font-size: 12px;
-		color: var(--text-muted);
-		line-height: 1.55;
-		margin-top: 2px;
-	}
-	.tb-warn {
-		background: var(--warn-bg);
-		border-left: 2.5px solid var(--warn-bar);
-		border-radius: 0 var(--radius-md) var(--radius-md) 0;
-		padding: 5px 9px;
-		margin-top: 5px;
-		font-size: 11px;
-		color: var(--warn-fg);
-		line-height: 1.45;
-	}
-	.tb-note {
-		background: var(--note-bg);
-		border-radius: var(--radius-md);
-		padding: 5px 9px;
-		margin-top: 4px;
-		font-size: 11px;
-		color: var(--note-fg);
-		line-height: 1.45;
-	}
-	.diff-added {
-		background: var(--add-bg);
-		border-left: 2.5px solid var(--moss);
-		border-radius: 0 var(--radius-md) var(--radius-md) 0;
-		padding: 5px 9px;
-		margin-top: 4px;
-		font-size: 11px;
-		color: var(--add-fg);
-		line-height: 1.45;
-	}
-	.diff-changed {
-		background: var(--chg-bg);
-		border-left: 2.5px solid var(--gold);
-		border-radius: 0 var(--radius-md) var(--radius-md) 0;
-		padding: 5px 9px;
-		margin-top: 4px;
-		font-size: 11px;
-		color: var(--chg-fg);
-		line-height: 1.45;
-	}
-	.diff-kept {
-		background: var(--note-bg);
-		border-left: 2.5px solid var(--accent-text);
-		border-radius: 0 var(--radius-md) var(--radius-md) 0;
-		padding: 5px 9px;
-		margin-top: 4px;
-		font-size: 11px;
-		color: var(--note-fg);
-		line-height: 1.45;
-	}
-	.footer {
-		text-align: center;
-		padding: 10px 0 3px;
-		font-size: 10px;
-		color: var(--text-muted);
-		opacity: 0.7;
-		font-family: 'Source Serif 4', serif;
-		font-style: italic;
-		letter-spacing: 0.05em;
-	}
-	/* Mobile: the Day-Route stepper is hidden (its Maps link survives as the
-	   compact .maps-link-btn under the map). It returns on desktop (see the
-	   ≥960px block), where it sits in the sticky right column beneath the map. */
-	.route-card {
-		display: none;
-		margin: 10px 13px 4px;
-		background: var(--surface-sunken);
-		border: 1px solid var(--hairline-strong);
-		border-radius: var(--radius-lg);
-		padding: 12px 14px 10px;
-		text-decoration: none;
-		color: var(--text);
-	}
-	/* Compact full-width quiet button that replaces the stepper on mobile — the
-	   route card's one unique affordance (open the whole day's route in Maps),
-	   kept at ≥44px tall. Hidden on desktop where the full card is back. */
-	.maps-link-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 6px;
-		margin: 4px 13px 2px;
-		min-height: 44px;
-		box-sizing: border-box;
-		padding: 6px 12px;
-		border: 1px solid var(--hairline-strong);
-		border-radius: var(--radius-button);
-		background: var(--surface-sunken);
-		color: var(--accent-text);
-		font-family: 'Source Serif 4', serif;
-		font-size: 12px;
-		text-decoration: none;
-	}
-	@media (hover: hover) {
-		.maps-link-btn:hover {
-			border-color: var(--accent-text);
-			background: color-mix(in srgb, var(--accent-text) 6%, transparent);
-		}
-	}
-	@media (prefers-reduced-motion: no-preference) {
-		.maps-link-btn {
-			transition:
-				border-color 0.15s ease,
-				background 0.15s ease,
-				transform 0.1s ease;
-		}
-		.maps-link-btn:active {
-			transform: scale(0.98);
-		}
-	}
-	@media (hover: hover) {
-		.route-card:hover {
-			border-color: var(--accent-text);
-			box-shadow: var(--elevation-1);
-		}
-	}
-	@media (prefers-reduced-motion: no-preference) {
-		.route-card {
-			transition:
-				border-color 0.15s ease,
-				box-shadow 0.15s ease,
-				transform 0.1s ease;
-		}
-		.route-card:active {
-			transform: scale(0.98);
-		}
-	}
-	.route-hdr {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-family: 'Source Serif 4', serif;
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--accent-text);
-		margin-bottom: 8px;
-	}
-	.route-stops {
-		display: flex;
-		align-items: flex-start;
-		overflow-x: auto;
-		scrollbar-width: none;
-		padding: 2px 0 6px;
-	}
-	.route-stops::-webkit-scrollbar {
-		display: none;
-	}
-	.route-stop {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		flex-shrink: 0;
-	}
-	.route-num {
-		width: 22px;
-		height: 22px;
-		border-radius: 50%;
-		background: var(--accent);
-		color: #fff;
-		font-size: 10px;
-		font-weight: 600;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-	}
-	.route-name {
-		font-size: 9px;
-		color: var(--text-muted);
-		text-align: center;
-		width: 70px;
-		line-height: 1.25;
-		margin-top: 3px;
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-	.route-connector {
-		width: 20px;
-		height: 2px;
-		background: repeating-linear-gradient(90deg, var(--hairline-strong) 0, var(--hairline-strong) 4px, transparent 4px, transparent 7px);
-		margin: 0 1px;
-		flex-shrink: 0;
-		align-self: flex-start;
-		margin-top: 10px;
-	}
-	.route-open {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 5px;
-		font-size: 11px;
-		color: var(--accent-text);
-		padding-top: 4px;
-		border-top: 1px solid var(--hairline);
-		margin-top: 2px;
-	}
-	.km-tag {
-		display: inline-block;
-		margin-top: 5px;
-		font-size: 10px;
-		color: var(--text-muted);
-		background: var(--surface-sunken);
-		border-radius: var(--radius-md);
-		padding: 1px 7px;
-	}
-	.cost-tag {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		margin-top: 5px;
-		margin-left: 5px;
-		font-size: 10px;
-		font-weight: 600;
-		color: var(--accent-strong);
-		background: var(--surface-sunken);
-		border-radius: var(--radius-md);
-		padding: 1px 7px;
-		font-variant-numeric: tabular-nums;
-	}
-	.cost-cat {
-		font-weight: 400;
-		color: var(--text-muted);
-	}
-	.tb-links {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 5px;
-		margin-top: 7px;
-	}
-	.tb-link {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		font-size: 11px;
-		font-weight: 600;
-		text-decoration: none;
-		color: var(--chip-booking-fg);
-		background: var(--chip-booking-bg);
-		border-radius: var(--radius-md);
-		padding: 3px 9px;
-	}
-	.tb-link:hover {
-		text-decoration: underline;
-	}
-	.tb-link svg {
-		flex-shrink: 0;
-		opacity: 0.85;
-	}
-	.tb-checklist {
-		margin-top: 8px;
-		background: var(--surface-sunken);
-		border-radius: var(--radius-md);
-		padding: 7px 10px;
-	}
-	.tb-checklist-hdr {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-		gap: 8px;
-		font-size: 12px;
-		font-weight: 600;
-	}
-	.tb-checklist-progress {
-		font-size: 10px;
-		font-weight: 500;
-		color: var(--text-muted);
-		flex-shrink: 0;
-	}
-	.tb-checklist-items {
-		list-style: none;
-		margin: 5px 0 0;
-		padding: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 3px;
-	}
-	.tb-checklist-item label {
-		display: flex;
-		align-items: flex-start;
-		gap: 6px;
-		font-size: 12px;
-		cursor: pointer;
-	}
-	.tb-checklist-item input[type='checkbox'] {
-		margin-top: 2px;
-		flex-shrink: 0;
-	}
-	.tb-checklist-item.done .tb-checklist-text {
-		color: var(--text-muted);
-		text-decoration: line-through;
-	}
-	.tb-photos {
-		margin-top: 8px;
-		display: flex;
-		flex-wrap: wrap;
-		gap: 7px;
-	}
-	/* Linked Google Photos: thumbnail strips (inside a block, or day-level). */
-	.ph-strip {
-		margin-top: 8px;
-		display: flex;
-		flex-wrap: wrap;
-		gap: 6px;
-	}
-	.ph-thumb {
-		width: 56px;
-		height: 56px;
-		padding: 0;
-		border: 1px solid var(--hairline-strong);
-		border-radius: var(--radius-md);
-		background: var(--surface-sunken);
-		overflow: hidden;
-		cursor: pointer;
-	}
-	.ph-thumb img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		display: block;
-		filter: var(--photo-filter);
-	}
 	.day-photos {
 		margin: 10px 13px 4px;
 		padding: 10px 12px;
@@ -2201,61 +1368,10 @@
 		letter-spacing: 0.08em;
 		color: var(--text-muted);
 	}
-	.ps-card {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		text-decoration: none;
-		width: 80px;
-		flex-shrink: 0;
-	}
-	.ps-thumb {
-		width: 80px;
-		height: 55px;
-		object-fit: cover;
-		border-radius: var(--radius-sm);
-		display: block;
-		filter: var(--photo-filter);
-	}
-	.ps-placeholder {
-		background: var(--surface-sunken);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-	.ps-placeholder::after {
-		content: '📷';
-		font-size: 18px;
-		opacity: 0.35;
-	}
-	.ps-label {
-		font-size: 10px;
-		color: var(--text-muted);
-		text-align: center;
-		line-height: 1.3;
-		margin-top: 3px;
-		padding: 0 2px;
-	}
-	.wx {
-		font-size: 9px;
-		color: var(--text-muted);
-		margin-top: 3px;
-		line-height: 1.2;
-		text-align: center;
-	}
-	/* Offline-stale-weather hint (Phase 6 item 5): .wx is already the muted
-	   token; this just de-emphasizes the suffix a touch further, matching the
-	   .dh-eye opacity-on-top-of-muted-color pattern used elsewhere in this file. */
-	.wx-offline {
-		opacity: 0.7;
-	}
 
-	/* ── Desktop: two-pane layout ──
-	   The shell widens; hero + sticky daynav still span its full width (they live
-	   outside .day-content). The day body becomes a two-column grid: a scrolling
-	   left column (header, timeline, photos) and a sticky right column holding the
-	   map then the Day-Route card. The keyed day-switch fly transition still
-	   applies to the whole .day-content grid. */
+	/* ── Desktop ──
+	   The shell widens; hero + sticky daynav span its full width. The day body's
+	   own two-column grid lives in TripDay, which owns those elements. */
 	@media (min-width: 960px) {
 		.shell {
 			/* Full-bleed: fill the fluid content track beside the 240px sidebar
@@ -2279,70 +1395,13 @@
 			padding-left: 24px;
 			padding-right: 24px;
 		}
-		.day-content {
-			display: grid;
-			/* Left track (timeline) capped at a readable line length; the map track
-			   is `1fr`, so all extra viewport width flows to the map. Map keeps a
-			   320px floor on the tight 960–1199 tier (240px sidebar present) and a
-			   420px floor at ≥1200 (below). */
-			grid-template-columns: minmax(0, 760px) minmax(320px, 1fr);
-			gap: 0 24px;
-			padding: 0 24px 8px;
-			align-items: start;
-		}
-		/* Left-column items are pinned to explicit rows 1-4 and the aside spans
-		   those same rows (grid-row: 1 / 5). Spanning explicit row lines — rather
-		   than `1 / -1`, which collapses to a single row when no rows are declared
-		   and would force row 1 to the map's full height — lets the tall map/route
-		   column sit beside the naturally-flowing left column. */
-		.day-hdr,
-		.tl,
-		.day-photos,
-		.footer {
-			grid-column: 1;
-			min-width: 0;
-		}
-		.day-hdr {
-			grid-row: 1;
-			margin: 16px 0 0;
-		}
-		.tl {
-			grid-row: 2;
-			padding: 12px 0 0;
-		}
+		/* The unmatched-photos card shares the .day-photos class with the day-level
+		   card that now lives in TripDay, and inherited this margin from TripDay's
+		   desktop grid rules. Preserved verbatim so the extraction changes nothing
+		   visually — it is almost certainly an accident of the shared class name
+		   (the card sits outside the grid, flush to the scroll area's edges). */
 		.day-photos {
-			grid-row: 3;
 			margin: 12px 0 0;
-		}
-		.footer {
-			grid-row: 4;
-		}
-		.day-aside {
-			grid-column: 2;
-			grid-row: 1 / 5;
-			align-self: start;
-			position: sticky;
-			/* No sticky day nav to clear at ≥960px anymore; this offset keeps the map
-			   clear of the demo page's sticky "sample trip" banner. */
-			top: 72px;
-		}
-		.route-card {
-			display: block;
-			margin: 16px 0 0;
-		}
-		.maps-link-btn {
-			display: none;
-		}
-	}
-
-	/* ── Wide desktop (≥1200px) ──
-	   The 240px sidebar leaves room for the full-width map again, so the day body's
-	   right column returns to a fixed 420px (it was narrowed on the 960–1199 tier).
-	   The former vertical day rail + shell grid moved out of TripView entirely — the
-	   persistent sidebar now carries the day rail at every width ≥960px. */
-	@media (min-width: 1200px) {
-		.day-content {
-			grid-template-columns: minmax(0, 760px) minmax(420px, 1fr);
 		}
 	}
 </style>

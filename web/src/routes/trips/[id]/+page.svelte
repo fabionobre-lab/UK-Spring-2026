@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import { beforeNavigate } from '$app/navigation';
+	import { page } from '$app/state';
 	import TripView from '$lib/TripView.svelte';
 	import SharePanel from '$lib/SharePanel.svelte';
 	import TripPhotosPanel from '$lib/TripPhotosPanel.svelte';
@@ -7,12 +9,127 @@
 	import type { IconName } from '$lib/nav/NavIcon.svelte';
 	import { loc, type Trip } from '$lib/trip-engine';
 	import type { TripPhoto } from '$lib/photos';
+	import { createAutosave } from '$lib/trip/autosave.svelte';
+	import { createHistory } from '$lib/trip/history.svelte';
+	import TripSettingsDrawer from '$lib/trip/TripSettingsDrawer.svelte';
 	import { t } from '$lib/i18n/store.svelte';
 	let { data } = $props();
 
 	let showShare = $state(false);
 	let showPhotos = $state(false);
+	let showSettings = $state(false);
 	const canEdit = $derived(data.role === 'owner' || data.role === 'editor');
+
+	// ── In-place editing (Phase 2 WYSIWYG) ──
+	// The page owns a mutable copy of the loaded doc. TripView renders this copy
+	// in BOTH modes, not just while editing, because a checklist tick also
+	// mutates the doc and has to land somewhere that survives to the next save.
+	// `autosave` debounces every mutation into one PUT and owns the single
+	// `updated_at` baseline for the page.
+	let draft = $state<Trip>(untrack(() => structuredClone(data.trip) as unknown as Trip));
+	let autosave = $state(
+		untrack(() => createAutosave(data.trip.id, () => draft, data.updatedAt))
+	);
+	// Document-level undo. Structural edits (insert/delete/duplicate/reorder)
+	// can't be undone by the browser, so the draft keeps its own history; text
+	// typed inside a field is still left to the field's native undo.
+	let history = $state(
+		untrack(() =>
+			createHistory(
+				() => draft,
+				(t) => (draft = t)
+			)
+		)
+	);
+	// `?edit=1` opens straight into edit mode — how the creation wizard hands off,
+	// so a brand-new trip lands you on the real itinerary ready to type rather
+	// than on a form describing it.
+	let editing = $state(
+		untrack(
+			() =>
+				(data.role === 'owner' || data.role === 'editor') &&
+				page.url.searchParams.get('edit') === '1'
+		)
+	);
+	// Navigating between two trips re-runs `load` without remounting this
+	// component, so re-seed the draft (and drop any scheduled save for the trip
+	// we just left). Guarded on the id so an incidental re-run of `load` can
+	// never discard unsaved edits to the trip already open.
+	$effect(() => {
+		const incoming = data.trip as unknown as Trip;
+		untrack(() => {
+			if (incoming.id === draft.id) return;
+			autosave.cancel();
+			draft = structuredClone(incoming) as Trip;
+			autosave = createAutosave(incoming.id, () => draft, data.updatedAt);
+			history = createHistory(
+				() => draft,
+				(t) => (draft = t)
+			);
+			editing = false;
+		});
+	});
+
+	// Only owners/editors write; for a viewer this stays undefined, which is also
+	// what keeps their checklist ticks local-only (see TripView's `onedit` doc).
+	const onedit = $derived(
+		canEdit
+			? (structural?: boolean) => {
+					history.capture(structural);
+					autosave.schedule();
+				}
+			: undefined
+	);
+	// Stepping the history is itself a change that has to reach the server.
+	function doUndo() {
+		if (history.undo()) autosave.schedule();
+	}
+	function doRedo() {
+		if (history.redo()) autosave.schedule();
+	}
+	const onundo = $derived(canEdit ? doUndo : undefined);
+
+	// Ctrl/⌘Z steps the document history — but only when focus is OUTSIDE an
+	// editable field, where the browser's own per-field undo is what the user
+	// means. Shift adds redo.
+	function onWindowKeydown(e: KeyboardEvent) {
+		if (!editing || !canEdit) return;
+		if (e.key !== 'z' && e.key !== 'Z') return;
+		if (!(e.metaKey || e.ctrlKey)) return;
+		const el = document.activeElement as HTMLElement | null;
+		if (el?.isContentEditable) return;
+		const tag = el?.tagName;
+		if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+		e.preventDefault();
+		if (e.shiftKey) doRedo();
+		else doUndo();
+	}
+
+	function toggleEditing() {
+		if (editing) autosave.flush();
+		editing = !editing;
+	}
+
+	// Don't leave a debounced edit unsaved on the way out.
+	beforeNavigate(() => autosave.flush());
+	$effect(() => {
+		if (!autosave.busy) return;
+		const handler = (e: BeforeUnloadEvent) => e.preventDefault();
+		window.addEventListener('beforeunload', handler);
+		return () => window.removeEventListener('beforeunload', handler);
+	});
+
+	const saveLabel = $derived(
+		{
+			clean: '',
+			pending: t('save.pending'),
+			saving: t('save.saving'),
+			saved: t('save.saved'),
+			invalid: t('save.invalid'),
+			error: t('save.error'),
+			conflict: t('save.conflict')
+		}[autosave.status]
+	);
 
 	// Mobile bottom bar: Trips · (Share if owner) · (Edit if canEdit) · More.
 	// Photos moves into the More sheet (it's page-level state here, so trivially
@@ -40,9 +157,19 @@
 				]
 			: []),
 		...(canEdit
-			? [{ id: 'edit', label: t('nav.edit'), icon: 'edit' as IconName, href: `/trips/${data.trip.id}/edit` }]
+			? [
+					{
+						id: 'edit',
+						label: editing ? t('tripbar.doneEditing') : t('nav.edit'),
+						icon: 'edit' as IconName,
+						onclick: toggleEditing,
+						current: editing
+					}
+				]
 			: [])
 	]);
+	// The desktop control bar is hidden below 960px, so Photos and Settings reach
+	// mobile through the bottom bar's More sheet.
 	const barMoreRows = $derived(
 		canEdit
 			? [
@@ -51,6 +178,12 @@
 						label: t('tripbar.photos'),
 						icon: 'photos' as IconName,
 						onclick: () => (showPhotos = !showPhotos)
+					},
+					{
+						id: 'settings',
+						label: t('tripbar.settings'),
+						icon: 'edit' as IconName,
+						onclick: () => (showSettings = !showSettings)
 					}
 				]
 			: []
@@ -82,14 +215,16 @@
 		data.trip.id;
 		lang = (data.trip as unknown as Trip).defaultLanguage || (data.trip as unknown as Trip).languages[0];
 	});
-	const pageTitle = $derived(`${loc(data.trip as unknown as Trip, (data.trip as unknown as Trip).title, lang)} — Zarparia`);
+	const pageTitle = $derived(`${loc(draft, draft.title, lang)} — Zarparia`);
 </script>
 
 <svelte:head>
 	<title>{pageTitle}</title>
 </svelte:head>
 
-<div class="page">
+<svelte:window onkeydown={onWindowKeydown} />
+
+<div class="page" class:editing>
 	<div class="bar">
 		<a class="back" href="/">{t('tripbar.allTrips')}</a>
 		<div class="actions">
@@ -100,13 +235,51 @@
 			{/if}
 			{#if canEdit}
 				<button class="btn" onclick={() => (showPhotos = !showPhotos)}>{showPhotos ? t('tripbar.close') : t('tripbar.photos')}</button>
-				<a class="btn" href="/trips/{data.trip.id}/edit">{t('tripbar.edit')}</a>
+				<button class="btn" class:on={showSettings} onclick={() => (showSettings = !showSettings)} aria-pressed={showSettings}>{t('tripbar.settings')}</button>
+				<button class="btn btn-edit" class:on={editing} onclick={toggleEditing} aria-pressed={editing}>
+					{editing ? t('tripbar.doneEditing') : t('tripbar.edit')}
+				</button>
 			{/if}
 		</div>
 	</div>
 
+	{#if canEdit && (editing || autosave.status !== 'clean')}
+		<div class="editbar">
+			{#if saveLabel}
+				<span class="save-chip s-{autosave.status}" aria-live="polite">{saveLabel}</span>
+			{/if}
+			{#if autosave.status === 'error'}
+				<button class="retry" onclick={() => autosave.retry()}>{t('save.retry')}</button>
+			{/if}
+			{#if editing}
+				<!-- Also reachable with Ctrl/⌘Z, but touch has no keyboard and the
+				     shortcut is invisible — so the buttons are the real affordance. -->
+				<span class="undo-group">
+					<button class="undo-btn" onclick={doUndo} disabled={!history.canUndo} title={t('common.undo')} aria-label={t('common.undo')}>↶</button>
+					<button class="undo-btn" onclick={doRedo} disabled={!history.canRedo} title={t('common.redo')} aria-label={t('common.redo')}>↷</button>
+				</span>
+				<span class="edit-hint">{t('edit.hint')}</span>
+			{/if}
+		</div>
+	{/if}
+
+	{#if autosave.status === 'conflict'}
+		<div class="banner banner-conflict" role="alert">
+			<strong>{t('save.conflict')}</strong>
+			<p>{t('save.conflictBody')}</p>
+			<button class="btn" onclick={() => window.location.reload()}>{t('save.reload')}</button>
+		</div>
+	{/if}
+
+	{#if autosave.status === 'invalid' && autosave.errors.length}
+		<div class="banner banner-invalid" role="alert">
+			<strong>{t('save.invalidBody')}</strong>
+			<ul>{#each autosave.errors as e (e)}<li>{e}</li>{/each}</ul>
+		</div>
+	{/if}
+
 	{#if showShare && data.role === 'owner'}
-		<SharePanel tripId={data.trip.id} tripTitle={loc(data.trip as unknown as Trip, (data.trip as unknown as Trip).title, lang)} />
+		<SharePanel tripId={data.trip.id} tripTitle={loc(draft, draft.title, lang)} />
 	{/if}
 
 	{#if showPhotos && canEdit}
@@ -115,16 +288,21 @@
 
 	{#key data.trip.id}
 		<TripView
-			trip={data.trip as unknown as Trip}
+			trip={draft}
 			bind:lang
 			{photos}
 			photosEditable={canEdit}
 			onphotoschanged={refreshPhotos}
-			checklistEditable={canEdit}
-			tripUpdatedAt={data.updatedAt}
+			edit={editing && canEdit}
+			{onedit}
+			{onundo}
 			printHref={`/trips/${data.trip.id}/print?lang=${lang}`}
 		/>
 	{/key}
+
+	{#if canEdit}
+		<TripSettingsDrawer trip={draft} tripId={data.trip.id} bind:open={showSettings} {onedit} />
+	{/if}
 
 	<BottomBar user={data.user} items={barItems} moreRows={barMoreRows} />
 </div>
@@ -177,6 +355,10 @@
 		background: var(--surface);
 		cursor: pointer;
 	}
+	.btn.on {
+		border-color: var(--accent-text);
+		background: color-mix(in srgb, var(--accent-text) 12%, transparent);
+	}
 	.role {
 		font-size: 0.72rem;
 		text-transform: uppercase;
@@ -185,5 +367,110 @@
 		background: var(--pill-warn-bg);
 		border-radius: var(--radius-pill);
 		padding: 0.2rem 0.6rem;
+	}
+
+	/* ── Edit-mode status row ──
+	   Lives outside .bar because .bar is desktop-only: on mobile the edit toggle
+	   is in the bottom app bar, but the save state still has to be visible. */
+	.editbar,
+	.banner {
+		max-width: 430px;
+		margin: 0 auto 0.6rem;
+		font-family: var(--font-ui);
+	}
+	@media (min-width: 960px) {
+		.editbar,
+		.banner {
+			max-width: none;
+		}
+	}
+	.editbar {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+	.save-chip {
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		border-radius: var(--radius-pill);
+		padding: 0.2rem 0.6rem;
+		background: var(--surface);
+		border: 1px solid var(--hairline-strong);
+		color: var(--text-muted);
+		white-space: nowrap;
+	}
+	.save-chip.s-saved {
+		color: var(--add-fg);
+		background: var(--add-bg);
+		border-color: transparent;
+	}
+	.save-chip.s-error,
+	.save-chip.s-conflict,
+	.save-chip.s-invalid {
+		color: var(--warn-fg);
+		background: var(--warn-bg);
+		border-color: transparent;
+	}
+	.edit-hint {
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+	.undo-group {
+		display: inline-flex;
+		gap: 0.25rem;
+	}
+	.undo-btn {
+		font-family: var(--font-ui);
+		font-size: 0.9rem;
+		line-height: 1;
+		color: var(--accent-strong);
+		background: var(--surface);
+		border: 1px solid var(--hairline-strong);
+		border-radius: var(--radius-button);
+		min-width: 32px;
+		min-height: 28px;
+		cursor: pointer;
+	}
+	.undo-btn:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.retry {
+		font-size: 0.75rem;
+		font-family: var(--font-ui);
+		color: var(--accent-strong);
+		background: none;
+		border: none;
+		padding: 0;
+		text-decoration: underline;
+		cursor: pointer;
+	}
+	.banner {
+		border-radius: var(--radius-md);
+		padding: 0.6rem 0.8rem;
+		font-size: 0.8rem;
+		line-height: 1.45;
+	}
+	.banner strong {
+		display: block;
+		margin-bottom: 0.2rem;
+	}
+	.banner p {
+		margin: 0 0 0.5rem;
+	}
+	.banner ul {
+		margin: 0.2rem 0 0;
+		padding-left: 1.1rem;
+	}
+	.banner-conflict {
+		background: var(--warn-bg);
+		color: var(--warn-fg);
+		border-left: 2.5px solid var(--warn-bar);
+	}
+	.banner-invalid {
+		background: var(--note-bg);
+		color: var(--note-fg);
 	}
 </style>

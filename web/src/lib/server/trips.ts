@@ -154,12 +154,52 @@ export async function getTripDocById(db: D1Database, tripId: string): Promise<Tr
 	return row ? (JSON.parse(row.doc) as TripDoc) : null;
 }
 
+/**
+ * Give every day and block a stable `id`, minting one wherever it's missing.
+ *
+ * Photo placement used to reference a day by its DATE and a stop by its INDEX,
+ * both of which change under ordinary editing — re-dating a day orphaned its
+ * photos, and reordering stops scrambled theirs. Identity fixes that at the
+ * root, but only if nothing can write a trip without it.
+ *
+ * This is called from createTrip and updateTrip, which between them are the
+ * only way a trip is ever stored: the REST API, the import route, the dev seed
+ * and the MCP connector all funnel through those two. Existing documents gain
+ * ids the first time they are written, and the returned doc carries them back
+ * to the caller so a long-lived client draft adopts them instead of provoking
+ * a fresh mint on every save.
+ *
+ * Mutates `doc` in place and returns it; safe to call repeatedly.
+ */
+export function assignEntityIds(doc: TripDoc): TripDoc {
+	for (const seg of doc.segments ?? []) {
+		for (const plan of seg.plans ?? []) {
+			for (const day of plan.days ?? []) {
+				const d = day as { id?: string; blocks?: { id?: string }[] };
+				if (!d.id) d.id = mintEntityId();
+				for (const block of d.blocks ?? []) {
+					if (!block.id) block.id = mintEntityId();
+				}
+			}
+		}
+	}
+	return doc;
+}
+
+/** 12 lowercase hex chars — matches the schema's ^[a-z0-9]{8,32}$ and is far
+ *  more than enough to stay unique within one trip document. */
+function mintEntityId(): string {
+	return crypto.randomUUID().replace(/-/g, '').slice(0, 12);
+}
+
 export async function createTrip(
 	db: D1Database,
 	userId: string,
 	doc: TripDoc,
 	desiredId?: string
 ): Promise<WriteResult> {
+	// Before validating, so the minted ids are themselves schema-checked.
+	assignEntityIds(doc);
 	const { valid, errors } = validateTripDoc(doc);
 	if (!valid) return { ok: false, reason: 'invalid', errors };
 
@@ -203,6 +243,7 @@ export async function updateTrip(
 	const role = await roleFor(db, userId, tripId);
 	if (!role) return { ok: false, reason: 'not_found' };
 	if (role === 'viewer') return { ok: false, reason: 'forbidden' };
+	assignEntityIds(doc);
 	const { valid, errors } = validateTripDoc(doc);
 	if (!valid) return { ok: false, reason: 'invalid', errors };
 

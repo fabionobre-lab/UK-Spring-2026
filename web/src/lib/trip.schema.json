@@ -154,11 +154,17 @@
         }
       }
     },
+    "entityId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]{8,32}$",
+      "description": "Stable identity minted on write, so photo placement survives re-dating and reordering. Optional: documents written before this existed stay valid and gain one on their next save."
+    },
     "day": {
       "type": "object",
       "required": ["date", "title", "blocks"],
       "additionalProperties": false,
       "properties": {
+        "id": { "$ref": "#/$defs/entityId" },
         "date": { "type": "string", "format": "date", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
         "title": { "$ref": "#/$defs/localized" },
         "note": { "$ref": "#/$defs/localized" },
@@ -198,6 +204,7 @@
       "required": ["time", "title"],
       "additionalProperties": false,
       "properties": {
+        "id": { "$ref": "#/$defs/entityId" },
         "time": { "type": "string" },
         "dotColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{3,8}$" },
         "title": { "$ref": "#/$defs/localized" },

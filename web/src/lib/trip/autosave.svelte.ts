@@ -30,6 +30,36 @@ export type SaveStatus =
 
 const DEBOUNCE_MS = 800;
 
+/**
+ * Copy server-minted day/block ids back onto the live draft.
+ *
+ * Walked positionally against the doc we just sent, which is exactly what came
+ * back — the server only adds ids, it never reorders. Only fills blanks, so an
+ * id the draft already holds is never overwritten, and a structural edit made
+ * while the save was in flight can at worst leave a day un-adopted until the
+ * next save.
+ */
+function adoptEntityIds(draft: Trip, saved: Trip): void {
+	saved.segments?.forEach((savedSeg, si) => {
+		const seg = draft.segments?.[si];
+		if (!seg) return;
+		savedSeg.plans?.forEach((savedPlan, pi) => {
+			const plan = seg.plans?.[pi];
+			if (!plan) return;
+			savedPlan.days?.forEach((savedDay, di) => {
+				const day = plan.days?.[di] as { id?: string; blocks?: { id?: string }[] } | undefined;
+				const src = savedDay as { id?: string; blocks?: { id?: string }[] };
+				if (!day) return;
+				if (!day.id && src.id) day.id = src.id;
+				src.blocks?.forEach((savedBlock, bi) => {
+					const block = day.blocks?.[bi];
+					if (block && !block.id && savedBlock.id) block.id = savedBlock.id;
+				});
+			});
+		});
+	});
+}
+
 export function createAutosave(
 	tripId: string,
 	getTrip: () => Trip,
@@ -85,8 +115,14 @@ export function createAutosave(
 				body
 			});
 			if (res.ok) {
-				const data = (await res.json()) as { updatedAt?: string };
+				const data = (await res.json()) as { updatedAt?: string; doc?: Trip };
 				if (data.updatedAt) base = data.updatedAt;
+				// The server mints stable ids for any day or block lacking one
+				// (lib/server/trips.ts). Adopt them, or a draft loaded before those
+				// ids existed would keep sending id-less days and provoke a FRESH
+				// mint on every save — breaking the photo references they exist to
+				// keep stable.
+				if (data.doc) adoptEntityIds(getTrip(), data.doc);
 				lastSentBody = body;
 				status = 'saved';
 			} else if (res.status === 409) {

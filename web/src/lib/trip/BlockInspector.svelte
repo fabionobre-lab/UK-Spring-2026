@@ -108,6 +108,20 @@
 		onedit?.();
 	}
 
+	// ── Dot colour ──
+	// The marker on the timeline rail. Optional: unset renders in the muted
+	// default, and a colour <input> has no way to express "none", so clearing
+	// unsets the property rather than blanking it — an empty string would fail
+	// the schema's ^#[0-9a-fA-F]{3,8}$ pattern.
+	function setDotColor(value: string) {
+		block.dotColor = value;
+		onedit?.();
+	}
+	function clearDotColor() {
+		block.dotColor = undefined;
+		onedit?.();
+	}
+
 	// ── Checklist ──
 	// Only the existence of the list is managed here; its title and items are
 	// edited in place on the stop itself, where they render.
@@ -252,6 +266,23 @@
 			<div class="grid2">
 				<label class="f">{t('block.time')}<input type="text" bind:value={block.time} placeholder={t('block.timePlaceholder')} /></label>
 				<label class="f">{t('block.walkKm')}<input type="number" step="0.1" min="0" bind:value={block.km} /></label>
+			</div>
+
+			<div class="f">
+				<span class="lbl">{t('block.dotColor')}</span>
+				<div class="dotrow">
+					<input
+						type="color"
+						value={block.dotColor ?? '#8a8a8a'}
+						oninput={(e) => setDotColor(e.currentTarget.value)}
+						aria-label={t('block.dotColor')}
+					/>
+					{#if block.dotColor}
+						<button type="button" class="mini" onclick={clearDotColor}>{t('block.dotColorClear')}</button>
+					{:else}
+						<span class="hintline">{t('block.dotColorDefault')}</span>
+					{/if}
+				</div>
 			</div>
 
 			{#if tagKeys.length}
@@ -576,6 +607,18 @@
 		grid-column: 2;
 		grid-row: 1 / -1;
 		align-self: start;
+	}
+	.dotrow {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.dotrow input[type='color'] {
+		width: 2.4rem;
+		height: 1.9rem;
+		padding: 2px;
+		flex-shrink: 0;
+		cursor: pointer;
 	}
 	.hintline {
 		margin: 0;

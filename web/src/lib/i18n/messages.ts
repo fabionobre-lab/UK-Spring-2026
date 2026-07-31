@@ -237,6 +237,7 @@ export interface Messages {
 	'editor.pleaseFix': string;
 	'editor.tripSettings': string;
 	'editor.tripTitle': string;
+	'editor.cover': string;
 	'editor.eyebrow': string;
 	'editor.languages': string;
 	'editor.addLanguage': string;
@@ -363,6 +364,8 @@ export interface Messages {
 	'block.time': string;
 	'block.timePlaceholder': string;
 	'block.dotColor': string;
+	'block.dotColorClear': string;
+	'block.dotColorDefault': string;
 	'block.title': string;
 	'block.tags': string;
 	'block.description': string;
@@ -826,6 +829,7 @@ const enGB: Messages = {
 	'editor.pleaseFix': 'Please fix:',
 	'editor.tripSettings': 'Trip settings',
 	'editor.tripTitle': 'Trip title',
+	'editor.cover': 'Cover emoji',
 	'editor.eyebrow': 'Eyebrow (e.g. April 2026)',
 	'editor.languages': 'Languages',
 	'editor.addLanguage': '+ Language',
@@ -947,6 +951,8 @@ const enGB: Messages = {
 	'block.time': 'Time',
 	'block.timePlaceholder': '09:30 or ~14:00',
 	'block.dotColor': 'Dot color',
+	'block.dotColorClear': 'Clear',
+	'block.dotColorDefault': 'Default',
 	'block.title': 'Title',
 	'block.tags': 'Tags',
 	'block.description': 'Description',
@@ -1400,6 +1406,7 @@ const ptBR: Messages = {
 	'editor.pleaseFix': 'Corrija:',
 	'editor.tripSettings': 'Configurações da viagem',
 	'editor.tripTitle': 'Título da viagem',
+	'editor.cover': 'Emoji da capa',
 	'editor.eyebrow': 'Sobrelinha (ex.: abril de 2026)',
 	'editor.languages': 'Idiomas',
 	'editor.addLanguage': '+ Idioma',
@@ -1521,6 +1528,8 @@ const ptBR: Messages = {
 	'block.time': 'Horário',
 	'block.timePlaceholder': '09:30 ou ~14:00',
 	'block.dotColor': 'Cor do ponto',
+	'block.dotColorClear': 'Limpar',
+	'block.dotColorDefault': 'Padrão',
 	'block.title': 'Título',
 	'block.tags': 'Tags',
 	'block.description': 'Descrição',

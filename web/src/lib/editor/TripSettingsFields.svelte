@@ -120,6 +120,12 @@
 	<LocalizedInput bind:value={trip.title} {langs} label={t('editor.tripTitle')} />
 	<LocalizedInput bind:value={trip.eyebrow as never} {langs} label={t('editor.eyebrow')} />
 
+	<!-- The emoji on this trip's card in the trips list. Rendered since the card
+	     was built, but until now there was nowhere in the app to set it. -->
+	<label class="f cover"
+		>{t('editor.cover')}<input type="text" bind:value={trip.cover} placeholder="🏛️" maxlength="8" /></label
+	>
+
 	<div class="langs">
 		<span class="lbl">{t('editor.languages')}</span>
 		<div class="chips">
@@ -200,6 +206,11 @@
 </div>
 
 <style>
+	.cover input {
+		width: 5rem;
+		text-align: center;
+		font-size: 1.1rem;
+	}
 	.langs {
 		margin: 0.5rem 0;
 	}

@@ -118,9 +118,10 @@
 		/** Step the document history back — offered as the action on the toast a
 		 *  deletion raises, so removing a stop is never a dead end. */
 		onundo?: () => void;
-		/** Photos placed on this day, for the day inspector's re-dating warning:
-		 *  placement is stored per-photo against the day's DATE, so changing it
-		 *  orphans them (see migrations/0005_trip_photos.sql). */
+		/** Photos on this day still placed by DATE rather than by the day's stable
+		 *  id — the only ones a date change would now orphan. Rows carrying a
+		 *  day_id follow the day (migration 0013), so this is zero once the
+		 *  backfill has run and the warning stops appearing on its own. */
 		dayPhotoCount?: number;
 		/** Day-level structural ops. Owned by TripView, which also has to move the
 		 *  day selection when the current day is removed or reordered. */

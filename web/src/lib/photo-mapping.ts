@@ -24,6 +24,12 @@ export interface PhotoPlacement {
 	/** Index into the day's blocks array, or null when the photo falls before
 	 *  the first timed block (renders in the day-level strip instead). */
 	blockIndex: number | null;
+	/** Stable id of the matched day, when the document carries one. Preferred
+	 *  over dayDate on read, because a day's date changes and its id does not. */
+	dayId?: string;
+	/** Stable id of the matched block, for the same reason blockIndex is not
+	 *  enough: reordering the stops in a day renumbers every index. */
+	blockId?: string;
 }
 
 /** The plan a photo should be matched against: the segment's default plan
@@ -73,11 +79,17 @@ export function mapPhotoToTrip(trip: Trip, creationTimeISO: string): PhotoPlacem
 		for (const day of plan.days ?? []) {
 			if (day.date !== localDate) continue;
 			const minutes = minutesSinceMidnightInTZ(instant, tz);
+			const blockIndex = blockIndexForMinutes(day.blocks ?? [], minutes);
+			const d = day as typeof day & { id?: string; blocks?: ({ id?: string } | undefined)[] };
 			return {
 				segmentId: seg.id,
 				planId: plan.id,
 				dayDate: day.date,
-				blockIndex: blockIndexForMinutes(day.blocks ?? [], minutes)
+				blockIndex,
+				// Undefined on documents written before ids existed; those rows keep
+				// resolving through dayDate/blockIndex until the backfill runs.
+				dayId: d.id,
+				blockId: blockIndex === null ? undefined : d.blocks?.[blockIndex]?.id
 			};
 		}
 	}

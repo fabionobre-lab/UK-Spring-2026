@@ -11,8 +11,14 @@ export interface TripPhoto {
 	/** Matched itinerary day (YYYY-MM-DD), or null = unmatched. */
 	dayDate: string | null;
 	/** Index into that day's blocks, or null = day-level. May dangle after an
-	 *  itinerary edit — treat out-of-range as day-level. */
+	 *  itinerary edit — treat out-of-range as day-level. Superseded by blockId
+	 *  where present; kept as the fallback for rows written before ids. */
 	blockIndex: number | null;
+	/** Stable id of the placed day/block. Preferred over dayDate/blockIndex on
+	 *  read: a day's date and a stop's index both move under editing, an id
+	 *  does not. Null on rows that predate the backfill. */
+	dayId?: string | null;
+	blockId?: string | null;
 	manualOverride: boolean;
 }
 

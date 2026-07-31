@@ -35,6 +35,8 @@ interface PhotoRow {
 	plan_id: string | null;
 	day_date: string | null;
 	block_index: number | null;
+	day_id: string | null;
+	block_id: string | null;
 	manual_override: number;
 }
 
@@ -48,6 +50,8 @@ function toTripPhoto(r: PhotoRow): TripPhoto {
 		planId: r.plan_id,
 		dayDate: r.day_date,
 		blockIndex: r.block_index,
+		dayId: r.day_id,
+		blockId: r.block_id,
 		manualOverride: r.manual_override === 1
 	};
 }
@@ -56,7 +60,7 @@ export async function listTripPhotos(db: D1Database, tripId: string): Promise<Tr
 	const rows = await db
 		.prepare(
 			`SELECT id, trip_id, creation_time, width, height, content_type,
-			        segment_id, plan_id, day_date, block_index, manual_override
+			        segment_id, plan_id, day_date, block_index, day_id, block_id, manual_override
 			 FROM trip_photos WHERE trip_id = ? AND deleted_at IS NULL ORDER BY creation_time, id`
 		)
 		.bind(tripId)
@@ -72,7 +76,7 @@ export async function getTripPhoto(
 	const row = await db
 		.prepare(
 			`SELECT id, trip_id, creation_time, width, height, content_type,
-			        segment_id, plan_id, day_date, block_index, manual_override
+			        segment_id, plan_id, day_date, block_index, day_id, block_id, manual_override
 			 FROM trip_photos WHERE id = ? AND trip_id = ? AND deleted_at IS NULL`
 		)
 		.bind(photoId, tripId)
@@ -120,8 +124,8 @@ export async function insertTripPhoto(
 		.prepare(
 			`INSERT INTO trip_photos
 			 (id, trip_id, media_item_id, creation_time, width, height, content_type,
-			  segment_id, plan_id, day_date, block_index, manual_override, added_by)
-			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`
+			  segment_id, plan_id, day_date, block_index, day_id, block_id, manual_override, added_by)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`
 		)
 		.bind(
 			args.id,
@@ -135,6 +139,8 @@ export async function insertTripPhoto(
 			p?.planId ?? null,
 			p?.dayDate ?? null,
 			p?.blockIndex ?? null,
+			p?.dayId ?? null,
+			p?.blockId ?? null,
 			args.addedBy
 		)
 		.run();
@@ -151,7 +157,7 @@ export async function reassignTripPhoto(
 	const res = await db
 		.prepare(
 			`UPDATE trip_photos
-			 SET segment_id = ?, plan_id = ?, day_date = ?, block_index = ?, manual_override = 1
+			 SET segment_id = ?, plan_id = ?, day_date = ?, block_index = ?, day_id = ?, block_id = ?, manual_override = 1
 			 WHERE id = ? AND trip_id = ?`
 		)
 		.bind(
@@ -159,6 +165,8 @@ export async function reassignTripPhoto(
 			placement?.planId ?? null,
 			placement?.dayDate ?? null,
 			placement?.blockIndex ?? null,
+			placement?.dayId ?? null,
+			placement?.blockId ?? null,
 			photoId,
 			tripId
 		)

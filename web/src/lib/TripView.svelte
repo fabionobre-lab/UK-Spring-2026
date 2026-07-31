@@ -755,35 +755,47 @@
 	// Photos come pre-placed (segment/plan/day/block) by capture time; this
 	// component only groups them onto the selected day. The segment guard
 	// covers the rare case of two segments containing the same calendar date.
+	// Placement resolves by stable id first, falling back to the date for rows
+	// written before ids existed (see migration 0013). That fallback is what
+	// makes re-dating a day safe: an id-carrying photo follows its day, and an
+	// un-backfilled one behaves exactly as it always did.
 	const dayPhotos = $derived.by<TripPhoto[]>(() => {
 		if (!current) return [];
-		return photos.filter(
-			(p) => p.dayDate === current.day.date && (!p.segmentId || p.segmentId === current.seg.id)
-		);
+		const dayId = (current.day as { id?: string }).id;
+		return photos.filter((p) => {
+			if (p.dayId && dayId) return p.dayId === dayId;
+			return p.dayDate === current.day.date && (!p.segmentId || p.segmentId === current.seg.id);
+		});
 	});
-	/** blockIndex → photos, counting only indexes that are valid for the plan
-	 *  being viewed (a stale index after an itinerary edit, or a placement
-	 *  computed against another plan, degrades to the day-level strip). */
+	/** Which block of the current day a photo belongs to, or null for the
+	 *  day-level strip. Resolved by the block's stable id where the row has one
+	 *  — which is what keeps a photo on its stop when the day is reordered —
+	 *  and by the stored index otherwise. A placement computed against another
+	 *  plan, or an index left dangling by an older edit, degrades to day level. */
+	function blockSlotFor(p: TripPhoto): number | null {
+		if (!current) return null;
+		if (p.blockId) {
+			const byId = current.day.blocks.findIndex((b) => (b as { id?: string }).id === p.blockId);
+			return byId === -1 ? null : byId;
+		}
+		if (p.blockIndex == null) return null;
+		if (p.planId && p.planId !== current.plan.id) return null;
+		if (p.blockIndex < 0 || p.blockIndex >= current.day.blocks.length) return null;
+		return p.blockIndex;
+	}
 	const photosByBlock = $derived.by<Map<number, TripPhoto[]>>(() => {
 		const m = new Map<number, TripPhoto[]>();
 		if (!current) return m;
 		for (const p of dayPhotos) {
-			if (p.blockIndex == null) continue;
-			if (p.planId && p.planId !== current.plan.id) continue;
-			if (p.blockIndex < 0 || p.blockIndex >= current.day.blocks.length) continue;
-			const arr = m.get(p.blockIndex);
+			const slot = blockSlotFor(p);
+			if (slot == null) continue;
+			const arr = m.get(slot);
 			if (arr) arr.push(p);
-			else m.set(p.blockIndex, [p]);
+			else m.set(slot, [p]);
 		}
 		return m;
 	});
-	const dayLevelPhotos = $derived(
-		dayPhotos.filter((p) => {
-			if (p.blockIndex == null || !current) return true;
-			if (p.planId && p.planId !== current.plan.id) return true;
-			return p.blockIndex < 0 || p.blockIndex >= current.day.blocks.length;
-		})
-	);
+	const dayLevelPhotos = $derived(dayPhotos.filter((p) => blockSlotFor(p) == null));
 	/** Photos whose capture date matched no itinerary day (or were unassigned
 	 *  by hand) — surfaced at the end of the trip so they can be placed. */
 	const unmatchedPhotos = $derived(photos.filter((p) => p.dayDate == null));
@@ -1069,7 +1081,7 @@
 					{edit}
 					{onedit}
 					{onundo}
-					dayPhotoCount={dayPhotos.length}
+					dayPhotoCount={dayPhotos.filter((p) => !p.dayId).length}
 					ondayinsert={insertDayAfter}
 					ondayduplicate={duplicateDay}
 					ondayremove={removeDay}

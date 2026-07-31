@@ -34,7 +34,9 @@
 			if (res.ok) {
 				const data = (await res.json()) as { id: string };
 				toast(t('toast.tripImported'));
-				await goto(`/trips/${data.id}/edit`);
+				// An imported trip always wants tidying, so land in edit mode on the
+				// itinerary itself (the standalone editor route is gone).
+				await goto(`/trips/${data.id}?edit=1`);
 				return;
 			}
 			const e = (await res.json().catch(() => ({}))) as { error?: string };

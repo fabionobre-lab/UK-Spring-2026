@@ -106,7 +106,6 @@
 	const SIDEBAR_ROUTES = new Set([
 		'/demo',
 		'/trips/[id]',
-		'/trips/[id]/edit',
 		'/trips/new',
 		'/trips/import',
 		'/account',

@@ -46,7 +46,7 @@ export const guide: GuideCatalog = {
 						id: 'first-trip',
 						title: 'Create your first trip',
 						body: [
-							'Once approved, use "New trip" to open a short wizard: give the trip a title and start date, then list the places you\'re going with how many nights at each. It builds a draft itinerary you can then refine in the editor — or start from a blank trip if you\'d rather build it up yourself.'
+								"Once approved, use 'New trip' to open a short wizard: give the trip a title and start date, then list the places you're going with how many nights at each. It builds the itinerary and drops you straight into it in edit mode, ready to fill in. Or start from a blank trip, which creates an empty one-day trip you rename and build up in place."
 						]
 					},
 					{
@@ -100,7 +100,7 @@ export const guide: GuideCatalog = {
 						title: 'Trip settings',
 						body: [
 							"Everything that describes the whole trip rather than any one day: title, cover emoji (the one shown on the trip's card in your trips list), languages, date format, currency and budget, the home base and the tag list. Press Settings on a trip and it opens as a panel over the itinerary, saving as you go like every other edit. Only people with edit access (owners and editors) see it.",
-							"A link at the bottom of that panel leads to the structural editor, which is where segments, plan variants and days themselves are added, reordered and removed — a bigger kind of change than editing a day, and still its own page with a live preview and its own Save button.",
+							"Segments, plan variants and days themselves are not here — each is added, reordered and removed from its own ⋮ on the itinerary, beside the thing it belongs to. There is no separate editor screen any more: everything about a trip is changed on the trip.",
 							"A stop can hold more than one plan — alternate versions of the same days, for example a rainy-day option alongside the usual one. Anyone viewing the trip can switch between a stop's plans using the plan tabs in the trip view."
 						]
 					},
@@ -311,7 +311,7 @@ export const guide: GuideCatalog = {
 						id: 'first-trip',
 						title: 'Crie sua primeira viagem',
 						body: [
-							'Depois de aprovado, use "Nova viagem" para abrir um assistente rápido: dê um título e uma data de início à viagem, depois liste os lugares que vai visitar com o número de noites em cada um. Isso monta um roteiro em rascunho que você pode refinar depois no editor — ou comece com uma viagem em branco se preferir montá-la você mesmo.'
+								'Depois de aprovado, use "Nova viagem" para abrir um assistente rápido: dê um título e uma data de início à viagem, depois liste os lugares que vai visitar com o número de noites em cada um. Isso monta o roteiro e já abre a viagem em modo de edição, pronta para preencher. Ou comece com uma viagem em branco, que cria uma viagem vazia de um dia para você renomear e montar no lugar.'
 						]
 					},
 					{
@@ -365,7 +365,7 @@ export const guide: GuideCatalog = {
 						title: 'Configurações da viagem',
 						body: [
 							'Tudo que descreve a viagem inteira, e não um dia específico: título, emoji da capa (aquele que aparece no cartão da viagem na sua lista), idiomas, formato de data, moeda e orçamento, a base de origem e a lista de etiquetas. Toque em Configurações em uma viagem e isso abre como um painel sobre o roteiro, salvando conforme você mexe, como qualquer outra edição. Só quem tem acesso de edição (donos e editores) vê o painel.',
-							'Um link no rodapé desse painel leva ao editor de estrutura, onde os trechos, as variantes de plano e os próprios dias são adicionados, reordenados e removidos — um tipo de mudança maior do que editar um dia, e que continua tendo página própria, com pré-visualização ao vivo e botão de salvar.',
+							'Os trechos, as variantes de plano e os próprios dias não ficam aqui — cada um é adicionado, reordenado e removido pelo ⋮ correspondente no roteiro, ao lado daquilo a que pertence. Não existe mais uma tela de edição separada: tudo em uma viagem é alterado na própria viagem.',
 							'Uma parada pode ter mais de um plano — versões alternativas dos mesmos dias, por exemplo uma opção para dia de chuva ao lado da opção normal. Quem visualiza a viagem pode alternar entre os planos de uma parada usando as abas de plano na visualização da viagem.'
 						]
 					},

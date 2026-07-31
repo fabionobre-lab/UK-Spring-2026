@@ -1,25 +1,34 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import TripEditor from '$lib/editor/TripEditor.svelte';
 	import CreationWizard from '$lib/editor/CreationWizard.svelte';
 	import BottomBar from '$lib/nav/BottomBar.svelte';
 	import type { Trip } from '$lib/trip-engine';
-	import { pruneEmpty, slugifyId } from '$lib/editor/factories';
+	import { blankTrip, pruneEmpty, slugifyId } from '$lib/editor/factories';
 	import { validateTripDoc, type TripDoc } from '$lib/validateTrip';
+	import { getNow } from '$lib/now';
 	import { t } from '$lib/i18n/store.svelte';
 
 	let { data } = $props();
 
-	// The landing is a two-step creation wizard. "Start from a blank trip" still
-	// drops into the blank form editor — a trip with no title can't be created
-	// yet, so there's nothing to edit in place.
+	// Both paths create the trip and land the author in edit mode ON the real
+	// itinerary, so the first thing they touch is the finished trip rather than a
+	// form describing one.
 	//
-	// The wizard path no longer stops at a form for review (Phase 5): it creates
-	// the trip and lands the author in edit mode ON the real itinerary, so the
-	// first thing they touch is the finished trip rather than a form describing
-	// one. Anything the wizard couldn't ask for is then filled in where it shows.
-	let stage = $state<'wizard' | 'blank' | 'creating'>('wizard');
+	// "Start from a blank trip" used to open the standalone form editor. With
+	// every field now editable in place (Phase 10), it instead mints the smallest
+	// valid trip — a placeholder title, today's date, one empty stop — and drops
+	// you straight into it to rename in situ.
+	let stage = $state<'wizard' | 'creating'>('wizard');
 	let createError = $state<string[]>([]);
+
+	function onBlank() {
+		const trip = blankTrip(['en']);
+		// A title is required to derive the id, and a day needs a valid date, so
+		// the blank trip is seeded just enough to satisfy the schema.
+		trip.title = { en: t('wizard.blankTitle') };
+		trip.segments[0].plans[0].days[0].date = getNow().toISOString().slice(0, 10);
+		void onCreate(trip);
+	}
 
 	async function onCreate(trip: Trip) {
 		stage = 'creating';
@@ -77,9 +86,7 @@
 			<ul>{#each createError as e (e)}<li>{e}</li>{/each}</ul>
 		</div>
 	{/if}
-	<CreationWizard {onCreate} onBlank={() => (stage = 'blank')} />
-{:else if stage === 'blank'}
-	<TripEditor initial={null} mode="new" />
+	<CreationWizard {onCreate} {onBlank} />
 {:else}
 	<p class="creating">{t('editor.saving')}</p>
 {/if}

@@ -301,7 +301,7 @@
 	{/key}
 
 	{#if canEdit}
-		<TripSettingsDrawer trip={draft} tripId={data.trip.id} bind:open={showSettings} {onedit} />
+		<TripSettingsDrawer trip={draft} bind:open={showSettings} {onedit} />
 	{/if}
 
 	<BottomBar user={data.user} items={barItems} moreRows={barMoreRows} />

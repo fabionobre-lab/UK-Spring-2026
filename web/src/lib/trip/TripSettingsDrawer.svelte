@@ -7,21 +7,18 @@
 	// same autosave as every other in-place change, so there is still exactly one
 	// draft and one save path on this page.
 	//
-	// Structure (segments, plan variants, days) is deliberately NOT here: it is
-	// a different kind of editing, and still has its own route, linked at the
-	// bottom of this panel.
+	// Structure (segments, plan variants, days) is NOT here: each of those is
+	// edited from its own ⋮ on the itinerary, beside the thing it belongs to.
 	import TripSettingsFields from '$lib/editor/TripSettingsFields.svelte';
 	import type { Trip } from '$lib/trip-engine';
 	import { t } from '$lib/i18n/store.svelte';
 
 	let {
 		trip,
-		tripId,
 		open = $bindable(false),
 		onedit
 	}: {
 		trip: Trip;
-		tripId: string;
 		open?: boolean;
 		onedit?: (structural?: boolean) => void;
 	} = $props();
@@ -52,7 +49,6 @@
 		</div>
 		<div class="dr-body">
 			<TripSettingsFields {trip} {onedit} />
-			<a class="dr-structure" href="/trips/{tripId}/edit">{t('editor.structureLink')}</a>
 		</div>
 	{/if}
 </div>
@@ -131,13 +127,5 @@
 	.dr-body {
 		overflow-y: auto;
 		padding: 0.9rem 1rem 1.2rem;
-	}
-	.dr-structure {
-		display: block;
-		margin-top: 1.1rem;
-		padding-top: 0.8rem;
-		border-top: 1px dashed var(--hairline);
-		font-size: 0.8rem;
-		color: var(--accent-strong);
 	}
 </style>

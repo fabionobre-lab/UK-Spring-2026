@@ -34,7 +34,7 @@ export interface Messages {
 	'nav.newTrip': string; // primary item → /trips/new
 	'nav.import': string; // primary item → /trips/import
 	'nav.share': string; // primary item → toggle Share panel
-	'nav.edit': string; // primary item → /trips/[id]/edit
+	'nav.edit': string; // primary item → toggles edit mode on /trips/[id]
 	'nav.more': string; // the 4th item that opens the sheet
 	'nav.back': string; // demo primary item → home
 	'nav.primaryLabel': string; // aria-label for the bottom <nav>
@@ -109,7 +109,6 @@ export interface Messages {
 	 *  remaining form editor, and the autosave status chip. */
 	'tripbar.doneEditing': string;
 	/** Link out of the settings drawer to the structural editor (Phase 5). */
-	'editor.structureLink': string;
 	'tripbar.settings': string;
 	'edit.hint': string;
 	'save.pending': string;
@@ -182,6 +181,7 @@ export interface Messages {
 
 	// ── Creation wizard (CreationWizard.svelte) ──
 	'wizard.pageTitle': string;
+	'wizard.blankTitle': string;
 	'wizard.newTrip': string;
 	'wizard.startBlank': string;
 	'wizard.step1': string;
@@ -229,11 +229,8 @@ export interface Messages {
 	'common.daily': string;
 	'common.hourly': string;
 
-	// ── Trip editor (TripEditor.svelte) ──
-	'editor.cancel': string;
-	'editor.saveTrip': string;
+	// ── Trip settings (editor/TripSettingsFields.svelte, shown in the drawer) ──
 	'editor.saving': string;
-	'editor.editLabel': string;
 	'editor.pleaseFix': string;
 	'editor.tripSettings': string;
 	'editor.tripTitle': string;
@@ -262,10 +259,6 @@ export interface Messages {
 	'editor.auto': string;
 	'editor.newTagKeyAria': string;
 	'editor.tagStyleAria': string;
-	'editor.segments': string;
-	'editor.addSegment': string;
-	'editor.livePreview': string;
-	'editor.previewPlaceholder': string;
 	'editor.errLangCode': string;
 	'editor.errLangDup': string;
 	'editor.errTagLabel': string;
@@ -275,36 +268,27 @@ export interface Messages {
 	'editor.errGiveTitle': string;
 	'editor.errSaveFailed': string;
 	'editor.errNetworkSave': string;
-	'editor.discardConfirm': string;
-	'editor.discardTitle': string; // ConfirmDialog title (body reuses editor.discardConfirm)
 
 	// ── Shared toast + confirm-dialog vocabulary (lib/toast, lib/dialog) ──
 	'toast.dismiss': string; // aria-label for the toast's close button
-	'toast.tripSaved': string;
 	'toast.tripImported': string;
 	'toast.photoDeleted': string;
 	'toast.photoMoved': string;
 	'toast.publicLinkCopied': string;
 	'toast.publicLinkRevoked': string;
-	'dialog.discard': string; // danger confirm-button label for the discard-changes dialog
 
-	// ── Segment editor (SegmentEditor.svelte) ──
+	// ── Segment inspector (trip/SegmentInspector.svelte) ──
 	/** Segment inspector on the itinerary itself (Phase 8 WYSIWYG). */
 	'seg.editDetails': string;
 	'seg.addSegment': string;
 	'seg.removed': string;
-	'seg.dragReorder': string;
 	'seg.moveUp': string;
 	'seg.moveDown': string;
 	'seg.remove': string;
-	'seg.placeholder': string;
 	'seg.segmentId': string;
 	'seg.autoPlaceholder': string;
 	'seg.internalKey': string;
 	'seg.theme': string;
-	'seg.segmentTitle': string;
-	'seg.subtitle': string;
-	'seg.footer': string;
 	'seg.customColors': string;
 	'seg.headerBg': string;
 	'seg.accent': string;
@@ -313,12 +297,9 @@ export interface Messages {
 	'seg.findPlaceLatLon': string;
 	'seg.granularity': string;
 	'seg.timezone': string;
-	'seg.plans': string;
-	'seg.plansAsTabs': string;
-	'seg.addPlan': string;
 	'seg.defaultPlan': string;
 
-	// ── Plan editor (PlanEditor.svelte) ──
+	// ── Plan-variant inspector (trip/PlanInspector.svelte) ──
 	/** Plan-variant inspector on the hero tabs (Phase 9 WYSIWYG). */
 	'plan.editDetails': string;
 	'plan.addVariant': string;
@@ -335,13 +316,8 @@ export interface Messages {
 	'plan.addedPrefix': string;
 	'plan.changedPrefix': string;
 	'plan.keptPrefix': string;
-	'plan.days': string;
-	'plan.addDay': string;
 
-	// ── Day editor (DayEditor.svelte) ──
-	'day.dragReorder': string;
-	'day.noDate': string;
-	'day.untitled': string;
+	// ── Day inspector (trip/DayInspector.svelte) ──
 	'day.moveUp': string;
 	'day.moveDown': string;
 	'day.duplicate': string;
@@ -360,20 +336,14 @@ export interface Messages {
 	'day.driving': string;
 	'day.transit': string;
 	'day.bicycling': string;
-	'day.dayTitle': string;
-	'day.dayNote': string;
-	'day.banner': string;
 	'day.kmOverride': string;
 	'day.storedWeather': string;
 	'day.highC': string;
 	'day.lowC': string;
 	'day.emoji': string;
-	'day.blocks': string;
-	'day.addBlock': string;
 
-	// ── Block editor (BlockEditor.svelte) ──
+	// ── Block inspector (trip/BlockInspector.svelte) ──
 	'block.dragReorder': string;
-	'block.untitled': string;
 	'block.moveUp': string;
 	'block.moveDown': string;
 	'block.duplicateAria': string;
@@ -383,16 +353,12 @@ export interface Messages {
 	'block.dotColor': string;
 	'block.dotColorClear': string;
 	'block.dotColorDefault': string;
-	'block.title': string;
 	'block.tags': string;
-	'block.description': string;
 	'block.findPlace': string;
 	'block.mapsUrl': string;
 	'block.walkKm': string;
 	'block.lat': string;
 	'block.lon': string;
-	'block.warning': string;
-	'block.note': string;
 	'block.waypoints': string;
 	'block.waypointQueryAria': string;
 	'block.name': string;
@@ -420,7 +386,6 @@ export interface Messages {
 	/** Checklist + photo-spot editing on the itinerary itself. */
 	'block.addChecklist': string;
 	'block.checklistInlineHint': string;
-	'block.addChecklistItemAria': string;
 	'block.removeChecklistItemAria': string;
 	'block.removePhotoSpotAria': string;
 	'block.removeWaypointAria': string;
@@ -428,16 +393,12 @@ export interface Messages {
 	'block.addStop': string;
 	'block.delete': string;
 	'block.removed': string;
-	'block.planDiff': string;
 	'block.diffNone': string;
 	'block.diffAdded': string;
 	'block.diffChanged': string;
 	'block.diffKept': string;
 	'block.diffReason': string;
 	'block.checklist': string;
-	'block.checklistTitle': string;
-	'block.checklistItem': string;
-	'block.checklistAddItem': string;
 	'block.checklistRemove': string;
 	'block.costAmount': string;
 	'block.costCategory': string;
@@ -719,7 +680,6 @@ const enGB: Messages = {
 	'tripbar.edit': 'Edit',
 	'tripbar.shared': 'Shared',
 	'tripbar.doneEditing': 'Done',
-	'editor.structureLink': 'Segments, plan variants and days →',
 	'tripbar.settings': 'Settings',
 	'edit.hint': 'Click any text to edit it. Changes save automatically.',
 	'save.pending': 'Unsaved',
@@ -793,6 +753,7 @@ const enGB: Messages = {
 	'share.publicErrRevoke': 'Could not revoke the public link.',
 
 	'wizard.pageTitle': 'New trip — Zarparia',
+	'wizard.blankTitle': 'Untitled trip',
 	'wizard.newTrip': 'New trip',
 	'wizard.startBlank': 'Start from a blank trip →',
 	'wizard.step1': '1 · Trip',
@@ -839,10 +800,7 @@ const enGB: Messages = {
 	'common.daily': 'daily',
 	'common.hourly': 'hourly',
 
-	'editor.cancel': '← Cancel',
-	'editor.saveTrip': 'Save trip',
 	'editor.saving': 'Saving…',
-	'editor.editLabel': 'Edit',
 	'editor.pleaseFix': 'Please fix:',
 	'editor.tripSettings': 'Trip settings',
 	'editor.tripTitle': 'Trip title',
@@ -871,10 +829,6 @@ const enGB: Messages = {
 	'editor.auto': 'auto',
 	'editor.newTagKeyAria': 'New tag key',
 	'editor.tagStyleAria': 'Tag style',
-	'editor.segments': 'Segments',
-	'editor.addSegment': '+ Add segment',
-	'editor.livePreview': 'Live preview',
-	'editor.previewPlaceholder': 'Preview appears as you add trip details',
 	'editor.errLangCode': 'Use a 2+ letter code, e.g. "es".',
 	'editor.errLangDup': '"{code}" is already added.',
 	'editor.errTagLabel': 'Give the tag a label.',
@@ -884,33 +838,24 @@ const enGB: Messages = {
 	'editor.errGiveTitle': 'Give the trip a title',
 	'editor.errSaveFailed': 'Save failed ({status})',
 	'editor.errNetworkSave': 'Network error while saving.',
-	'editor.discardConfirm': 'Discard unsaved changes?',
-	'editor.discardTitle': 'Discard changes?',
 
 	'toast.dismiss': 'Dismiss',
-	'toast.tripSaved': 'Trip saved.',
 	'toast.tripImported': 'Trip imported.',
 	'toast.photoDeleted': 'Photo deleted.',
 	'toast.photoMoved': 'Photo moved.',
 	'toast.publicLinkCopied': 'Public link copied.',
 	'toast.publicLinkRevoked': 'Public link revoked.',
-	'dialog.discard': 'Discard',
 
 	'seg.editDetails': 'Segment details',
 	'seg.addSegment': 'Add segment',
 	'seg.removed': 'Segment deleted.',
-	'seg.dragReorder': 'Drag to reorder segment',
 	'seg.moveUp': 'Move segment up',
 	'seg.moveDown': 'Move segment down',
 	'seg.remove': 'Remove segment',
-	'seg.placeholder': '(segment)',
 	'seg.segmentId': 'Segment id',
 	'seg.autoPlaceholder': 'auto',
 	'seg.internalKey': 'internal key, auto-generated',
 	'seg.theme': 'Theme',
-	'seg.segmentTitle': 'Segment title',
-	'seg.subtitle': 'Subtitle',
-	'seg.footer': 'Footer',
 	'seg.customColors': 'Custom colors (override theme)',
 	'seg.headerBg': 'Header bg',
 	'seg.accent': 'Accent',
@@ -919,9 +864,6 @@ const enGB: Messages = {
 	'seg.findPlaceLatLon': 'Find place (sets lat/lon)',
 	'seg.granularity': 'Granularity',
 	'seg.timezone': 'Timezone',
-	'seg.plans': 'Plans',
-	'seg.plansAsTabs': '(shown as tabs)',
-	'seg.addPlan': '+ Add plan variant',
 	'seg.defaultPlan': 'Default plan',
 
 	'plan.editDetails': 'Plan variant',
@@ -939,12 +881,7 @@ const enGB: Messages = {
 	'plan.addedPrefix': 'Added prefix',
 	'plan.changedPrefix': 'Changed prefix',
 	'plan.keptPrefix': 'Kept prefix',
-	'plan.days': 'Days',
-	'plan.addDay': '+ Add day',
 
-	'day.dragReorder': 'Drag to reorder day',
-	'day.noDate': 'no date',
-	'day.untitled': '(untitled day)',
 	'day.moveUp': 'Move day up',
 	'day.moveDown': 'Move day down',
 	'day.duplicate': 'Duplicate',
@@ -963,19 +900,13 @@ const enGB: Messages = {
 	'day.driving': 'driving',
 	'day.transit': 'transit',
 	'day.bicycling': 'bicycling',
-	'day.dayTitle': 'Day title',
-	'day.dayNote': 'Day note',
-	'day.banner': 'Banner (celebration strip)',
 	'day.kmOverride': 'Total km override (optional)',
 	'day.storedWeather': 'Stored weather (for past trips)',
 	'day.highC': 'High °C',
 	'day.lowC': 'Low °C',
 	'day.emoji': 'Emoji',
-	'day.blocks': 'Blocks',
-	'day.addBlock': '+ Add block',
 
 	'block.dragReorder': 'Drag to reorder block',
-	'block.untitled': '(untitled block)',
 	'block.moveUp': 'Move block up',
 	'block.moveDown': 'Move block down',
 	'block.duplicateAria': 'Duplicate block',
@@ -985,16 +916,12 @@ const enGB: Messages = {
 	'block.dotColor': 'Dot color',
 	'block.dotColorClear': 'Clear',
 	'block.dotColorDefault': 'Default',
-	'block.title': 'Title',
 	'block.tags': 'Tags',
-	'block.description': 'Description',
 	'block.findPlace': 'Find place',
 	'block.mapsUrl': 'Maps URL',
 	'block.walkKm': 'Walk (km)',
 	'block.lat': 'Lat',
 	'block.lon': 'Lon',
-	'block.warning': 'Warning',
-	'block.note': 'Note',
 	'block.waypoints': 'Waypoints',
 	'block.waypointQueryAria': 'Waypoint maps query',
 	'block.name': 'Name',
@@ -1016,7 +943,6 @@ const enGB: Messages = {
 	'block.removeLinkAria': 'Remove this booking link',
 	'block.addChecklist': 'Add a checklist',
 	'block.checklistInlineHint': 'Edit the title and items on the stop itself.',
-	'block.addChecklistItemAria': 'Add a checklist item',
 	'block.removeChecklistItemAria': 'Remove this checklist item',
 	'block.removePhotoSpotAria': 'Remove this photo spot',
 	'block.removeWaypointAria': 'Remove this waypoint',
@@ -1024,16 +950,12 @@ const enGB: Messages = {
 	'block.addStop': 'Add a stop',
 	'block.delete': 'Delete',
 	'block.removed': 'Stop deleted.',
-	'block.planDiff': 'Plan diff',
 	'block.diffNone': 'none',
 	'block.diffAdded': 'added',
 	'block.diffChanged': 'changed',
 	'block.diffKept': 'kept',
 	'block.diffReason': 'Diff reason',
 	'block.checklist': 'Checklist',
-	'block.checklistTitle': 'Checklist title',
-	'block.checklistItem': 'Item',
-	'block.checklistAddItem': '+ Add item',
 	'block.checklistRemove': 'Remove checklist',
 	'block.costAmount': 'Cost',
 	'block.costCategory': 'Category',
@@ -1311,7 +1233,6 @@ const ptBR: Messages = {
 	'tripbar.edit': 'Editar',
 	'tripbar.shared': 'Compartilhada',
 	'tripbar.doneEditing': 'Concluir',
-	'editor.structureLink': 'Trechos, variantes de plano e dias →',
 	'tripbar.settings': 'Configurações',
 	'edit.hint': 'Clique em qualquer texto para editá-lo. As alterações são salvas automaticamente.',
 	'save.pending': 'Não salvo',
@@ -1385,6 +1306,7 @@ const ptBR: Messages = {
 	'share.publicErrRevoke': 'Não foi possível revogar o link público.',
 
 	'wizard.pageTitle': 'Nova viagem — Zarparia',
+	'wizard.blankTitle': 'Viagem sem título',
 	'wizard.newTrip': 'Nova viagem',
 	'wizard.startBlank': 'Começar com uma viagem em branco →',
 	'wizard.step1': '1 · Viagem',
@@ -1431,10 +1353,7 @@ const ptBR: Messages = {
 	'common.daily': 'diário',
 	'common.hourly': 'por hora',
 
-	'editor.cancel': '← Cancelar',
-	'editor.saveTrip': 'Salvar viagem',
 	'editor.saving': 'Salvando…',
-	'editor.editLabel': 'Editar',
 	'editor.pleaseFix': 'Corrija:',
 	'editor.tripSettings': 'Configurações da viagem',
 	'editor.tripTitle': 'Título da viagem',
@@ -1463,10 +1382,6 @@ const ptBR: Messages = {
 	'editor.auto': 'auto',
 	'editor.newTagKeyAria': 'Nova chave de tag',
 	'editor.tagStyleAria': 'Estilo da tag',
-	'editor.segments': 'Trechos',
-	'editor.addSegment': '+ Adicionar trecho',
-	'editor.livePreview': 'Pré-visualização',
-	'editor.previewPlaceholder': 'A pré-visualização aparece conforme você adiciona detalhes',
 	'editor.errLangCode': 'Use um código de 2 letras ou mais, ex.: "es".',
 	'editor.errLangDup': '"{code}" já foi adicionado.',
 	'editor.errTagLabel': 'Dê um rótulo à tag.',
@@ -1476,33 +1391,24 @@ const ptBR: Messages = {
 	'editor.errGiveTitle': 'Dê um título à viagem',
 	'editor.errSaveFailed': 'Falha ao salvar ({status})',
 	'editor.errNetworkSave': 'Erro de rede ao salvar.',
-	'editor.discardConfirm': 'Descartar as alterações não salvas?',
-	'editor.discardTitle': 'Descartar alterações?',
 
 	'toast.dismiss': 'Dispensar',
-	'toast.tripSaved': 'Viagem salva.',
 	'toast.tripImported': 'Viagem importada.',
 	'toast.photoDeleted': 'Foto excluída.',
 	'toast.photoMoved': 'Foto movida.',
 	'toast.publicLinkCopied': 'Link público copiado.',
 	'toast.publicLinkRevoked': 'Link público revogado.',
-	'dialog.discard': 'Descartar',
 
 	'seg.editDetails': 'Detalhes do trecho',
 	'seg.addSegment': 'Adicionar trecho',
 	'seg.removed': 'Trecho excluído.',
-	'seg.dragReorder': 'Arraste para reordenar o trecho',
 	'seg.moveUp': 'Mover trecho para cima',
 	'seg.moveDown': 'Mover trecho para baixo',
 	'seg.remove': 'Remover trecho',
-	'seg.placeholder': '(trecho)',
 	'seg.segmentId': 'ID do trecho',
 	'seg.autoPlaceholder': 'auto',
 	'seg.internalKey': 'chave interna, gerada automaticamente',
 	'seg.theme': 'Tema',
-	'seg.segmentTitle': 'Título do trecho',
-	'seg.subtitle': 'Subtítulo',
-	'seg.footer': 'Rodapé',
 	'seg.customColors': 'Cores personalizadas (substituem o tema)',
 	'seg.headerBg': 'Fundo do cabeçalho',
 	'seg.accent': 'Destaque',
@@ -1511,9 +1417,6 @@ const ptBR: Messages = {
 	'seg.findPlaceLatLon': 'Buscar lugar (define lat/lon)',
 	'seg.granularity': 'Granularidade',
 	'seg.timezone': 'Fuso horário',
-	'seg.plans': 'Planos',
-	'seg.plansAsTabs': '(exibidos como abas)',
-	'seg.addPlan': '+ Adicionar variação de plano',
 	'seg.defaultPlan': 'Plano padrão',
 
 	'plan.editDetails': 'Variante de plano',
@@ -1531,12 +1434,7 @@ const ptBR: Messages = {
 	'plan.addedPrefix': 'Prefixo de adicionado',
 	'plan.changedPrefix': 'Prefixo de alterado',
 	'plan.keptPrefix': 'Prefixo de mantido',
-	'plan.days': 'Dias',
-	'plan.addDay': '+ Adicionar dia',
 
-	'day.dragReorder': 'Arraste para reordenar o dia',
-	'day.noDate': 'sem data',
-	'day.untitled': '(dia sem título)',
 	'day.moveUp': 'Mover dia para cima',
 	'day.moveDown': 'Mover dia para baixo',
 	'day.duplicate': 'Duplicar',
@@ -1555,19 +1453,13 @@ const ptBR: Messages = {
 	'day.driving': 'de carro',
 	'day.transit': 'transporte público',
 	'day.bicycling': 'de bicicleta',
-	'day.dayTitle': 'Título do dia',
-	'day.dayNote': 'Nota do dia',
-	'day.banner': 'Faixa (destaque comemorativo)',
 	'day.kmOverride': 'Total de km (opcional)',
 	'day.storedWeather': 'Clima salvo (para viagens passadas)',
 	'day.highC': 'Máx. °C',
 	'day.lowC': 'Mín. °C',
 	'day.emoji': 'Emoji',
-	'day.blocks': 'Blocos',
-	'day.addBlock': '+ Adicionar bloco',
 
 	'block.dragReorder': 'Arraste para reordenar o bloco',
-	'block.untitled': '(bloco sem título)',
 	'block.moveUp': 'Mover bloco para cima',
 	'block.moveDown': 'Mover bloco para baixo',
 	'block.duplicateAria': 'Duplicar bloco',
@@ -1577,16 +1469,12 @@ const ptBR: Messages = {
 	'block.dotColor': 'Cor do ponto',
 	'block.dotColorClear': 'Limpar',
 	'block.dotColorDefault': 'Padrão',
-	'block.title': 'Título',
 	'block.tags': 'Tags',
-	'block.description': 'Descrição',
 	'block.findPlace': 'Buscar lugar',
 	'block.mapsUrl': 'URL do mapa',
 	'block.walkKm': 'Caminhada (km)',
 	'block.lat': 'Lat',
 	'block.lon': 'Lon',
-	'block.warning': 'Aviso',
-	'block.note': 'Nota',
 	'block.waypoints': 'Pontos de passagem',
 	'block.waypointQueryAria': 'Consulta de mapa do ponto de passagem',
 	'block.name': 'Nome',
@@ -1608,7 +1496,6 @@ const ptBR: Messages = {
 	'block.removeLinkAria': 'Remover este link de reserva',
 	'block.addChecklist': 'Adicionar uma lista',
 	'block.checklistInlineHint': 'Edite o título e os itens na própria parada.',
-	'block.addChecklistItemAria': 'Adicionar um item à lista',
 	'block.removeChecklistItemAria': 'Remover este item da lista',
 	'block.removePhotoSpotAria': 'Remover este ponto de foto',
 	'block.removeWaypointAria': 'Remover este ponto de passagem',
@@ -1616,16 +1503,12 @@ const ptBR: Messages = {
 	'block.addStop': 'Adicionar uma parada',
 	'block.delete': 'Excluir',
 	'block.removed': 'Parada excluída.',
-	'block.planDiff': 'Diferença de plano',
 	'block.diffNone': 'nenhuma',
 	'block.diffAdded': 'adicionado',
 	'block.diffChanged': 'alterado',
 	'block.diffKept': 'mantido',
 	'block.diffReason': 'Motivo da diferença',
 	'block.checklist': 'Lista de itens',
-	'block.checklistTitle': 'Título da lista',
-	'block.checklistItem': 'Item',
-	'block.checklistAddItem': '+ Adicionar item',
 	'block.checklistRemove': 'Remover lista',
 	'block.costAmount': 'Custo',
 	'block.costCategory': 'Categoria',

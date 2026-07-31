@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { beforeNavigate } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import TripView from '$lib/TripView.svelte';
 	import SharePanel from '$lib/SharePanel.svelte';
@@ -11,6 +11,7 @@
 	import type { TripPhoto } from '$lib/photos';
 	import { createAutosave } from '$lib/trip/autosave.svelte';
 	import { createHistory } from '$lib/trip/history.svelte';
+	import { tripActions } from '$lib/nav/tripNav.svelte';
 	import TripSettingsDrawer from '$lib/trip/TripSettingsDrawer.svelte';
 	import { t } from '$lib/i18n/store.svelte';
 	let { data } = $props();
@@ -132,9 +133,9 @@
 	);
 
 	// Mobile bottom bar: Trips · (Share if owner) · (Edit if canEdit) · More.
-	// Photos moves into the More sheet (it's page-level state here, so trivially
-	// wirable). The ics/"Add to calendar" action lives inside TripView's hero and
-	// isn't exposed cross-component, so it's intentionally left out of More.
+	// The More sheet carries every secondary per-trip action: Print and Add to
+	// calendar (published by TripView, which owns the plan selection the ICS is
+	// built from), plus Photos and Settings.
 	type BarItem = {
 		id: string;
 		label: string;
@@ -171,22 +172,46 @@
 	// The desktop control bar is hidden below 960px, so Photos and Settings reach
 	// mobile through the bottom bar's More sheet.
 	const barMoreRows = $derived(
-		canEdit
-			? [
-					{
-						id: 'photos',
-						label: t('tripbar.photos'),
-						icon: 'photos' as IconName,
-						onclick: () => (showPhotos = !showPhotos)
-					},
-					{
-						id: 'settings',
-						label: t('tripbar.settings'),
-						icon: 'edit' as IconName,
-						onclick: () => (showSettings = !showSettings)
-					}
-				]
-			: []
+		[
+			// Published by TripView — the ICS is built from its own plan selection,
+			// so the page can't construct it itself.
+			...(tripActions()?.printHref
+				? [
+						{
+							id: 'print',
+							label: t('tripbar.print'),
+							icon: 'print' as IconName,
+							onclick: () => goto(tripActions()!.printHref!)
+						}
+					]
+				: []),
+			...(tripActions()
+				? [
+						{
+							id: 'calendar',
+							label: t('tripbar.calendar'),
+							icon: 'calendar' as IconName,
+							onclick: () => tripActions()!.downloadIcs()
+						}
+					]
+				: []),
+			...(canEdit
+				? [
+						{
+							id: 'photos',
+							label: t('tripbar.photos'),
+							icon: 'photos' as IconName,
+							onclick: () => (showPhotos = !showPhotos)
+						},
+						{
+							id: 'settings',
+							label: t('tripbar.settings'),
+							icon: 'edit' as IconName,
+							onclick: () => (showSettings = !showSettings)
+						}
+					]
+				: [])
+		]
 	);
 
 	// Photos load client-side only (SSR of a big trip's strips exceeds the
@@ -297,6 +322,7 @@
 			{onedit}
 			{onundo}
 			printHref={`/trips/${data.trip.id}/print?lang=${lang}`}
+			actionsInMoreSheet
 		/>
 	{/key}
 

@@ -43,7 +43,7 @@
 	import { photoUrl, type TripPhoto } from './photos';
 	import { getNow } from './now';
 	import { formatMoney } from './format';
-	import { setTripNav, type TripNavVM } from './nav/tripNav.svelte';
+	import { setTripNav, setTripActions, type TripNavVM } from './nav/tripNav.svelte';
 
 	// trip is fixed for the lifetime of a mounted TripView (the page remounts
 	// per trip id), so these initial reads are intentionally non-reactive.
@@ -55,6 +55,7 @@
 		photoToken,
 		onphotoschanged,
 		printHref,
+		actionsInMoreSheet = false,
 		edit = false,
 		onedit,
 		onundo
@@ -75,6 +76,12 @@
 		 *  `/trips/[id]/print?lang=…`). Renders a "Print / Save as PDF" action in
 		 *  the hero when set; omitted where no such route exists (editor preview). */
 		printHref?: string;
+		/** The host route has a bottom bar whose More sheet carries Print and
+		 *  "Add to calendar" instead (see lib/nav/tripNav.svelte.ts). Hides them
+		 *  from the hero below 960px only — desktop keeps them, and a route
+		 *  without a bottom bar (the public /s/[token] share link) must leave
+		 *  this off or the two actions become unreachable on a phone. */
+		actionsInMoreSheet?: boolean;
 		/** In-place editing (Phase 2 WYSIWYG): text fields in the hero, the day
 		 *  header and every block become contenteditable where they render. */
 		edit?: boolean;
@@ -881,13 +888,30 @@
 		};
 		setTripNav(vm);
 	});
-	onDestroy(() => setTripNav(null));
+
+	// Republished whenever the print link or the plan/language selection behind
+	// the ICS changes, so the More sheet's actions always reflect what's on
+	// screen. Only worth publishing where a host actually renders them.
+	$effect(() => {
+		if (!actionsInMoreSheet) return;
+		// Touch the reactive inputs downloadIcs closes over, so switching plan or
+		// language re-publishes rather than leaving a stale closure.
+		lang;
+		planBySeg;
+		setTripActions({ printHref, downloadIcs });
+		return () => setTripActions(null);
+	});
+
+	onDestroy(() => {
+		setTripNav(null);
+		setTripActions(null);
+	});
 </script>
 
 <div class="shell theme-{current?.seg.theme || 'tartan'}" style={themeStyle}>
 	<div class="hero">
 		<div class="hero-inner">
-			<div class="hero-row1">
+			<div class="hero-row1" class:in-more={actionsInMoreSheet}>
 				<div class="trip-eyebrow">
 					<EditableText bind:value={trip.eyebrow} {lang} {edit} {onedit} label={uiText.edEyebrow} />
 				</div>
@@ -1303,6 +1327,13 @@
 	   the real constraint: at a 768px viewport the hero is still only 398px
 	   wide, so a 600px or 768px breakpoint re-wrapped immediately. */
 	@media (max-width: 959.98px) {
+		/* Where the bottom bar's More sheet carries them, the hero drops them
+		   entirely — the language pill is all that's left, and the eyebrow and
+		   title get the top of the screen back. Routes without a bottom bar keep
+		   the compact icon row below. */
+		.hero-row1.in-more .ics-btn {
+			display: none;
+		}
 		.btn-label {
 			display: none;
 		}
@@ -1311,8 +1342,10 @@
 			padding: 0;
 			justify-content: center;
 		}
-		.trip-eyebrow {
-			/* Own line, so the actions below it are a single unbroken row. */
+		.hero-row1:not(.in-more) .trip-eyebrow {
+			/* Own line, so the icon row below it is a single unbroken row. With the
+			   buttons moved to the More sheet only the language pill is left, and
+			   that shares the eyebrow's line comfortably. */
 			flex: 1 0 100%;
 		}
 		.hero-actions {

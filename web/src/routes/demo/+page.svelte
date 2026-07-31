@@ -2,7 +2,9 @@
 	import { untrack, onDestroy } from 'svelte';
 	import TripView from '$lib/TripView.svelte';
 	import BottomBar from '$lib/nav/BottomBar.svelte';
-	import { setSidebarAbout } from '$lib/nav/tripNav.svelte';
+	import { goto } from '$app/navigation';
+	import { setSidebarAbout, tripActions } from '$lib/nav/tripNav.svelte';
+	import type { IconName } from '$lib/nav/NavIcon.svelte';
 	import { loc, type Trip } from '$lib/trip-engine';
 	import { t } from '$lib/i18n/store.svelte';
 	import DemoAboutDialog from './DemoAboutDialog.svelte';
@@ -14,6 +16,32 @@
 	const trip = untrack(() => data.trip as unknown as Trip);
 	let lang = $state(trip.defaultLanguage || trip.languages[0]);
 	const pageTitle = $derived(`${loc(trip, trip.title, lang)} — Zarparia`);
+
+	// Print and Add-to-calendar sit in the More sheet on a phone rather than
+	// above the trip title. TripView publishes them because the ICS is built
+	// from the plan selection it owns.
+	const demoMoreRows = $derived(
+		tripActions()
+			? [
+					...(tripActions()!.printHref
+						? [
+								{
+									id: 'print',
+									label: t('tripbar.print'),
+									icon: 'print' as IconName,
+									onclick: () => goto(tripActions()!.printHref!)
+								}
+							]
+						: []),
+					{
+						id: 'calendar',
+						label: t('tripbar.calendar'),
+						icon: 'calendar' as IconName,
+						onclick: () => tripActions()!.downloadIcs()
+					}
+				]
+			: []
+	);
 
 	// Auto-open the About dialog on the visitor's first demo view this session;
 	// the banner's About button reopens it any time after.
@@ -89,11 +117,12 @@
 
 	<DemoAboutDialog bind:open={aboutOpen} />
 
-	<TripView {trip} bind:lang photos={data.photos} photosEditable={false} printHref={`/demo/print?lang=${lang}`} />
+	<TripView {trip} bind:lang photos={data.photos} photosEditable={false} printHref={`/demo/print?lang=${lang}`} actionsInMoreSheet />
 
 	<BottomBar
 		user={data.user}
 		items={[{ id: 'back', label: t('nav.back'), icon: 'back', href: '/' }]}
+		moreRows={demoMoreRows}
 		onAbout={() => (aboutOpen = true)}
 		aboutLabel={t('demo.about')}
 	/>

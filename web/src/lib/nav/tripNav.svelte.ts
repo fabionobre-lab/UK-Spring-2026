@@ -58,6 +58,34 @@ export function tripNav(): TripNavVM | null {
 	return tripState;
 }
 
+// ── Trip actions published to the app's mobile chrome ──
+// Print and "Add to calendar" are per-trip actions that used to sit in the
+// hero. On a phone that put two buttons above the trip title — chrome ahead of
+// content — when the bottom bar's More sheet is where every other per-trip
+// action already lives (Photos, Settings). The ICS download is built from
+// TripView's own plan selection, so the page can't construct it: TripView
+// publishes the pair here and the page renders them as More rows.
+//
+// Same shape as the rail above: a snapshot re-published whenever it changes,
+// cleared on destroy.
+export interface TripActionsVM {
+	/** Link to the printable document, when the route has one. */
+	printHref?: string;
+	/** Downloads the .ics for the trip as currently displayed (language + the
+	 *  plan variant selected in each segment). */
+	downloadIcs: () => void;
+}
+
+let actionsState = $state<TripActionsVM | null>(null);
+
+export function setTripActions(vm: TripActionsVM | null): void {
+	actionsState = vm;
+}
+
+export function tripActions(): TripActionsVM | null {
+	return actionsState;
+}
+
 // ── Page-provided "About" action (signed-out demo variant) ──
 // The Sidebar lives in the root layout and can't see a page's local dialog
 // state, so a page (the demo) registers an opener here and clears it on destroy.

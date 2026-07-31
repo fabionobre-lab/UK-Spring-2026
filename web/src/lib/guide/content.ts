@@ -73,7 +73,7 @@ export const guide: GuideCatalog = {
 						id: 'trip-view',
 						title: 'Trip view',
 						body: [
-							'The read-through view of a trip: a day-by-day itinerary with times, places, notes and a map, grouped into segments. This is what you see when you open a trip, and what anyone you share it with sees too.',
+								'The read-through view of a trip: a day-by-day itinerary with times, places, notes and a map, grouped into segments. This is what you see when you open a trip, and what anyone you share it with sees too. On a phone, Print and Add to calendar live under More in the bottom bar; on a wider screen they sit in the trip header.',
 							"Each day also shows a weather forecast, when the trip is close enough in time for one to be available. For trips that have already happened, the editor can instead record the weather that actually happened, so the day still shows something useful."
 						]
 					},
@@ -338,7 +338,7 @@ export const guide: GuideCatalog = {
 						id: 'trip-view',
 						title: 'Visualização da viagem',
 						body: [
-							'A visão de leitura de uma viagem: um roteiro dia a dia com horários, lugares, notas e um mapa, organizado em paradas. É o que você vê ao abrir uma viagem, e o que qualquer pessoa com quem você a compartilha também vê.',
+							'A visão de leitura de uma viagem: um roteiro dia a dia com horários, lugares, notas e um mapa, agrupado em trechos. No celular, Imprimir e Adicionar ao calendário ficam em Mais, na barra inferior; em telas maiores ficam no cabeçalho da viagem. É o que você vê ao abrir uma viagem, e o que qualquer pessoa com quem você a compartilha também vê.',
 							'Cada dia também mostra uma previsão do tempo, quando a viagem está próxima o suficiente para haver uma previsão disponível. Para viagens que já aconteceram, o editor pode registrar o tempo que realmente fez, para que o dia continue mostrando algo útil.'
 						]
 					},

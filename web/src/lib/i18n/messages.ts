@@ -110,6 +110,10 @@ export interface Messages {
 	'tripbar.doneEditing': string;
 	/** Link out of the settings drawer to the structural editor (Phase 5). */
 	'tripbar.settings': string;
+	/** Per-trip actions in the mobile More sheet (they sit in the hero on
+	 *  desktop, and on share links which have no bottom bar). */
+	'tripbar.print': string;
+	'tripbar.calendar': string;
 	'edit.hint': string;
 	'save.pending': string;
 	'save.saving': string;
@@ -681,6 +685,8 @@ const enGB: Messages = {
 	'tripbar.shared': 'Shared',
 	'tripbar.doneEditing': 'Done',
 	'tripbar.settings': 'Settings',
+	'tripbar.print': 'Print / Save as PDF',
+	'tripbar.calendar': 'Add to calendar',
 	'edit.hint': 'Click any text to edit it. Changes save automatically.',
 	'save.pending': 'Unsaved',
 	'save.saving': 'Saving…',
@@ -1234,6 +1240,8 @@ const ptBR: Messages = {
 	'tripbar.shared': 'Compartilhada',
 	'tripbar.doneEditing': 'Concluir',
 	'tripbar.settings': 'Configurações',
+	'tripbar.print': 'Imprimir / Salvar PDF',
+	'tripbar.calendar': 'Adicionar ao calendário',
 	'edit.hint': 'Clique em qualquer texto para editá-lo. As alterações são salvas automaticamente.',
 	'save.pending': 'Não salvo',
 	'save.saving': 'Salvando…',

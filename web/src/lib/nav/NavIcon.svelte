@@ -10,6 +10,8 @@
 		| 'more'
 		| 'back'
 		| 'photos'
+		| 'print'
+		| 'calendar'
 		| 'about'
 		| 'feedback'
 		| 'language'
@@ -75,6 +77,15 @@
 		<rect x="3" y="3" width="18" height="18" rx="2" />
 		<circle cx="8.5" cy="8.5" r="1.5" />
 		<path d="m21 15-5-5L5 21" />
+	{:else if name === 'print'}
+		<!-- printer — same glyph as the hero's Print / Save as PDF action -->
+		<path d="M6 9V2h12v7" />
+		<path d="M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2" />
+		<rect x="6" y="14" width="12" height="8" rx="1" />
+	{:else if name === 'calendar'}
+		<!-- calendar — same glyph as the hero's Add to calendar action -->
+		<rect x="3" y="4" width="18" height="18" rx="2" />
+		<path d="M16 2v4M8 2v4M3 10h18" />
 	{:else if name === 'about'}
 		<!-- info -->
 		<circle cx="12" cy="12" r="9" />

@@ -34,6 +34,9 @@
 	import TripDay from './trip/TripDay.svelte';
 	import PhotoStrip from './trip/PhotoStrip.svelte';
 	import EditableText from './trip/EditableText.svelte';
+	import { blankDay, isoAddDays } from './editor/factories';
+	import { toast, dismissToast } from './toast';
+	import { t } from './i18n/store.svelte';
 	import { tripChrome } from './i18n/tripChrome';
 	import { photoUrl, type TripPhoto } from './photos';
 	import { getNow } from './now';
@@ -133,6 +136,77 @@
 			...checklistOverrides,
 			[checklistKey(seg, plan, day, bi, ii)]: next
 		};
+	}
+
+	// ── Day-level structural editing (Phase 7) ──
+	// Owned here rather than in TripDay because removing or reordering a day also
+	// has to move the day SELECTION, which lives in this component. Each op
+	// mutates the current plan's day list and reports a structural edit so it
+	// lands as its own undo step.
+	function dayOps() {
+		return current ? { plan: current.plan, i: current.plan.days.indexOf(current.day) } : null;
+	}
+	/** First unclaimed date at or after `fromIso` + 1 day.
+	 *
+	 *  Two days sharing a date makes the nav's date walk skip every day after
+	 *  them — they vanish from the strip — so a new day must never collide. And
+	 *  it can't simply be left undated either: `date` is required AND pattern-
+	 *  matched, so a blank one fails the schema and the day silently can't save.
+	 *  Walking forward to a free slot always yields something valid; when that
+	 *  lands out of sequence (inserting mid-trip), the day inspector's
+	 *  out-of-order hint tells the author to adjust it. */
+	function nextFreeDate(days: Day[], fromIso: string): string {
+		const used = new Set(days.map((d) => d.date).filter(Boolean));
+		// No usable anchor (a trip of undated days): fall back to today's date.
+		let candidate = isoAddDays(fromIso || isoDateInTZ(getNow(), tz), 1);
+		for (let guard = 0; used.has(candidate) && guard < 400; guard++) {
+			candidate = isoAddDays(candidate, 1);
+		}
+		return candidate;
+	}
+	function insertDayAfter() {
+		const c = dayOps();
+		if (!c || c.i < 0) return;
+		const d = blankDay(trip.languages);
+		d.date = nextFreeDate(c.plan.days, c.plan.days[c.i].date);
+		c.plan.days.splice(c.i + 1, 0, d);
+		onedit?.(true);
+		dayIdx = clampedIdx + 1;
+	}
+	function duplicateDay() {
+		const c = dayOps();
+		if (!c || c.i < 0) return;
+		const copy = structuredClone($state.snapshot(c.plan.days[c.i])) as Day;
+		// A verbatim copy would duplicate the date, which is the same collision.
+		copy.date = nextFreeDate(c.plan.days, c.plan.days[c.i].date);
+		c.plan.days.splice(c.i + 1, 0, copy);
+		onedit?.(true);
+		dayIdx = clampedIdx + 1;
+	}
+	function removeDay() {
+		const c = dayOps();
+		if (!c || c.i < 0 || c.plan.days.length <= 1) return; // schema: minItems 1
+		c.plan.days.splice(c.i, 1);
+		onedit?.(true);
+		// Land on the neighbour rather than whatever now occupies this index.
+		dayIdx = Math.max(0, clampedIdx - 1);
+		toast.danger(t('day.removed'), {
+			actionLabel: t('common.undo'),
+			onAction: () => {
+				onundo?.();
+				dismissToast();
+			}
+		});
+	}
+	function moveDay(dir: -1 | 1) {
+		const c = dayOps();
+		if (!c || c.i < 0) return;
+		const j = c.i + dir;
+		if (j < 0 || j >= c.plan.days.length) return;
+		const [d] = c.plan.days.splice(c.i, 1);
+		c.plan.days.splice(j, 0, d);
+		onedit?.(true);
+		dayIdx = clampedIdx + dir;
 	}
 
 	const isPast = untrack(() => tripIsPast(trip));
@@ -808,6 +882,14 @@
 					{edit}
 					{onedit}
 					{onundo}
+					dayPhotoCount={dayPhotos.length}
+					ondayinsert={insertDayAfter}
+					ondayduplicate={duplicateDay}
+					ondayremove={removeDay}
+					ondaymove={moveDay}
+					canDayMoveUp={plan.days.indexOf(day) > 0}
+					canDayMoveDown={plan.days.indexOf(day) < plan.days.length - 1}
+					canDayRemove={plan.days.length > 1}
 				/>
 			{/key}
 		{/if}

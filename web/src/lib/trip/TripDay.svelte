@@ -43,6 +43,7 @@
 	import NowMarker from './NowMarker.svelte';
 	import PhotoStrip from './PhotoStrip.svelte';
 	import EditableText from './EditableText.svelte';
+	import DayInspector from './DayInspector.svelte';
 	import Tip from '$lib/Tip.svelte';
 
 	let {
@@ -70,7 +71,15 @@
 		onphotostopclick,
 		edit = false,
 		onedit,
-		onundo
+		onundo,
+		dayPhotoCount = 0,
+		ondayinsert,
+		ondayduplicate,
+		ondayremove,
+		ondaymove,
+		canDayMoveUp = false,
+		canDayMoveDown = false,
+		canDayRemove = false
 	}: {
 		trip: Trip;
 		lang: string;
@@ -109,6 +118,19 @@
 		/** Step the document history back — offered as the action on the toast a
 		 *  deletion raises, so removing a stop is never a dead end. */
 		onundo?: () => void;
+		/** Photos placed on this day, for the day inspector's re-dating warning:
+		 *  placement is stored per-photo against the day's DATE, so changing it
+		 *  orphans them (see migrations/0005_trip_photos.sql). */
+		dayPhotoCount?: number;
+		/** Day-level structural ops. Owned by TripView, which also has to move the
+		 *  day selection when the current day is removed or reordered. */
+		ondayinsert?: () => void;
+		ondayduplicate?: () => void;
+		ondayremove?: () => void;
+		ondaymove?: (dir: -1 | 1) => void;
+		canDayMoveUp?: boolean;
+		canDayMoveDown?: boolean;
+		canDayRemove?: boolean;
 	} = $props();
 
 	const L = (obj: Parameters<typeof loc>[1]) => loc(trip, obj, lang);
@@ -210,7 +232,24 @@
 >
 	<div class="day-hdr">
 		<div class="dh-in">
-			<div class="dh-eye">{dayLabel(day.date, localeFor(trip, lang))}</div>
+			<div class="dh-eye">
+				{dayLabel(day.date, localeFor(trip, lang))}
+				{#if edit}
+					<DayInspector
+						{day}
+						{plan}
+						photoCount={dayPhotoCount}
+						{onedit}
+						oninsert={ondayinsert}
+						onduplicate={ondayduplicate}
+						onremove={ondayremove}
+						onmove={ondaymove}
+						canMoveUp={canDayMoveUp}
+						canMoveDown={canDayMoveDown}
+						canRemove={canDayRemove}
+					/>
+				{/if}
+			</div>
 			<div class="dh-title">
 				<EditableText bind:value={day.title} {lang} {edit} {onedit} label={uiText.edDayTitle} />
 			</div>
@@ -402,6 +441,13 @@
 		color: var(--hero-eyebrow);
 		opacity: 0.7;
 		margin-bottom: 1px;
+		/* Editing adds the day's ⋮ beside the date; the row has to become a flex
+		   line for it, and loses the opacity so the control isn't washed out. */
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 6px;
+		min-height: 12px;
 	}
 	.dh-title {
 		font-family: 'Source Serif 4', serif;

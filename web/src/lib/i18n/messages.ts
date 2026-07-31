@@ -336,6 +336,12 @@ export interface Messages {
 	'day.duplicate': string;
 	'day.duplicateAria': string;
 	'day.removeAria': string;
+	/** Day inspector on the itinerary itself (Phase 7 WYSIWYG). */
+	'day.editDetails': string;
+	'day.addDay': string;
+	'day.removed': string;
+	'day.photosWarning': string;
+	'day.datesOutOfOrder': string;
 	'day.dateIso': string;
 	'day.routeMode': string;
 	'day.routeNone': string;
@@ -924,6 +930,12 @@ const enGB: Messages = {
 	'day.duplicate': 'Duplicate',
 	'day.duplicateAria': 'Duplicate day',
 	'day.removeAria': 'Remove day',
+	'day.editDetails': 'Day details',
+	'day.addDay': 'Add day',
+	'day.removed': 'Day deleted.',
+	'day.photosWarning':
+		'{count} photo(s) are placed on this day. Changing its date unlinks them from the itinerary — you can re-place them from the photo viewer.',
+	'day.datesOutOfOrder': 'Day dates are out of order, so free days between them are no longer shown.',
 	'day.dateIso': 'Date (ISO)',
 	'day.routeMode': 'Route mode',
 	'day.routeNone': '(none)',
@@ -1501,6 +1513,12 @@ const ptBR: Messages = {
 	'day.duplicate': 'Duplicar',
 	'day.duplicateAria': 'Duplicar dia',
 	'day.removeAria': 'Remover dia',
+	'day.editDetails': 'Detalhes do dia',
+	'day.addDay': 'Adicionar dia',
+	'day.removed': 'Dia excluído.',
+	'day.photosWarning':
+		'{count} foto(s) estão colocadas neste dia. Mudar a data desvincula essas fotos do roteiro — você pode recolocá-las pelo visualizador de fotos.',
+	'day.datesOutOfOrder': 'As datas dos dias estão fora de ordem, então os dias livres entre elas deixaram de aparecer.',
 	'day.dateIso': 'Data (ISO)',
 	'day.routeMode': 'Modo de rota',
 	'day.routeNone': '(nenhum)',

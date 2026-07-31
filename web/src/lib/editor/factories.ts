@@ -111,6 +111,9 @@ export function pruneEmpty(value: unknown, keepEmptyStr = false): unknown {
 		// starts blank — without this the whole trip is unsaveable from the moment
 		// you add one until you happen to type a title.
 		const isSegment = Array.isArray(v.plans);
+		// A block's plan-diff annotation requires both a kind and a reason, and the
+		// reason starts blank when you pick a kind — same trap as the above.
+		const isBlockDiff = 'kind' in v && 'reason' in v;
 		const out: Record<string, unknown> = {};
 		for (const [k, val] of Object.entries(v)) {
 			// Preserve empties for required scaffolding fields, and propagate the
@@ -121,7 +124,8 @@ export function pruneEmpty(value: unknown, keepEmptyStr = false): unknown {
 				(isBlock && (k === 'title' || k === 'time')) ||
 				(isChecklist && k === 'title') ||
 				(isChecklistItem && k === 'text') ||
-				(isSegment && k === 'title');
+				(isSegment && k === 'title') ||
+				(isBlockDiff && k === 'reason');
 			const p = pruneEmpty(val, keepChild);
 			if (p !== undefined) out[k] = p;
 		}

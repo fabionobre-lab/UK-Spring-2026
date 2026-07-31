@@ -319,6 +319,13 @@ export interface Messages {
 	'seg.defaultPlan': string;
 
 	// ── Plan editor (PlanEditor.svelte) ──
+	/** Plan-variant inspector on the hero tabs (Phase 9 WYSIWYG). */
+	'plan.editDetails': string;
+	'plan.addVariant': string;
+	'plan.removed': string;
+	'plan.setDefault': string;
+	'plan.isDefault': string;
+	'block.diffKind': string;
 	'plan.moveUp': string;
 	'plan.moveDown': string;
 	'plan.remove': string;
@@ -917,6 +924,12 @@ const enGB: Messages = {
 	'seg.addPlan': '+ Add plan variant',
 	'seg.defaultPlan': 'Default plan',
 
+	'plan.editDetails': 'Plan variant',
+	'plan.addVariant': 'Add a plan variant',
+	'plan.removed': 'Plan variant deleted.',
+	'plan.setDefault': 'Make default',
+	'plan.isDefault': 'Opens by default',
+	'block.diffKind': 'Compared with the other plan',
 	'plan.moveUp': 'Move plan up',
 	'plan.moveDown': 'Move plan down',
 	'plan.remove': 'Remove plan',
@@ -1503,6 +1516,12 @@ const ptBR: Messages = {
 	'seg.addPlan': '+ Adicionar variação de plano',
 	'seg.defaultPlan': 'Plano padrão',
 
+	'plan.editDetails': 'Variante de plano',
+	'plan.addVariant': 'Adicionar variante de plano',
+	'plan.removed': 'Variante de plano excluída.',
+	'plan.setDefault': 'Tornar padrão',
+	'plan.isDefault': 'Abre por padrão',
+	'block.diffKind': 'Em comparação com o outro plano',
 	'plan.moveUp': 'Mover plano para cima',
 	'plan.moveDown': 'Mover plano para baixo',
 	'plan.remove': 'Remover plano',

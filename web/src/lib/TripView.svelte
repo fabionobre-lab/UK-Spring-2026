@@ -35,6 +35,7 @@
 	import PhotoStrip from './trip/PhotoStrip.svelte';
 	import EditableText from './trip/EditableText.svelte';
 	import SegmentInspector from './trip/SegmentInspector.svelte';
+	import PlanInspector from './trip/PlanInspector.svelte';
 	import { blankDay, blankSegment, isoAddDays, nextId } from './editor/factories';
 	import { toast, dismissToast } from './toast';
 	import { t } from './i18n/store.svelte';
@@ -300,6 +301,63 @@
 		trip.segments.splice(j, 0, s);
 		onedit?.(true);
 		dayIdx = firstDayIndexOfSegment(j);
+	}
+
+	// ── Plan-variant structural editing (Phase 9) ──
+	// A plan is an alternate version of a segment's days. Ops live here because
+	// they touch `planBySeg` (which plan is on screen) as well as the document.
+	function planOps() {
+		if (!current) return null;
+		const seg = current.seg;
+		return { seg, i: seg.plans.indexOf(current.plan) };
+	}
+	function addPlanVariant() {
+		const c = planOps();
+		if (!c || c.i < 0) return;
+		// A variant starts as a copy of the plan you're looking at — an empty one
+		// would need every day rebuilt by hand, which is never what you want.
+		const copy = structuredClone($state.snapshot(c.seg.plans[c.i])) as Plan;
+		copy.id = nextId('plan', c.seg.plans.map((p) => p.id));
+		copy.label = undefined;
+		c.seg.plans.splice(c.i + 1, 0, copy);
+		onedit?.(true);
+		setPlan(c.seg, copy.id);
+	}
+	function duplicatePlanVariant() {
+		addPlanVariant();
+	}
+	function removePlanVariant() {
+		const c = planOps();
+		if (!c || c.i < 0 || c.seg.plans.length <= 1) return; // schema: minItems 1
+		const removedId = c.seg.plans[c.i].id;
+		c.seg.plans.splice(c.i, 1);
+		// defaultPlan points at a plan by id; leaving it dangling would silently
+		// fall back to the first plan on every load.
+		if (c.seg.defaultPlan === removedId) c.seg.defaultPlan = undefined;
+		onedit?.(true);
+		setPlan(c.seg, c.seg.plans[Math.min(c.i, c.seg.plans.length - 1)].id);
+		toast.danger(t('plan.removed'), {
+			actionLabel: t('common.undo'),
+			onAction: () => {
+				onundo?.();
+				dismissToast();
+			}
+		});
+	}
+	function movePlanVariant(dir: -1 | 1) {
+		const c = planOps();
+		if (!c || c.i < 0) return;
+		const j = c.i + dir;
+		if (j < 0 || j >= c.seg.plans.length) return;
+		const [p] = c.seg.plans.splice(c.i, 1);
+		c.seg.plans.splice(j, 0, p);
+		onedit?.(true);
+	}
+	function setDefaultPlanToCurrent() {
+		const c = planOps();
+		if (!c || c.i < 0) return;
+		c.seg.defaultPlan = c.seg.plans[c.i].id;
+		onedit?.(true);
 	}
 
 	const isPast = untrack(() => tripIsPast(trip));
@@ -872,14 +930,36 @@
 				<div class="trip-title"></div>
 				<div class="trip-sub"></div>
 			{/if}
-			{#if current && current.seg.plans.length > 1}
-				<div class="vtabs">
+			<!-- Variant tabs. Normally only worth showing when there's more than one
+			     plan, but while editing they're also the only way to create the
+			     second one, so the row stays. -->
+			{#if current && (edit || current.seg.plans.length > 1)}
+				<div class="vtabs" class:vtabs-edit={edit}>
 					{#each current.seg.plans as p (p.id)}
 						{@const on = p.id === planOf(current.seg).id}
 						<button class="vtab" class:on aria-pressed={on} onclick={() => setPlan(current.seg, p.id)}>
 							{L(p.label) || p.id}
 						</button>
 					{/each}
+					{#if edit}
+						<button class="vtab vtab-add" onclick={addPlanVariant} aria-label={t('plan.addVariant')} title={t('plan.addVariant')}>+</button>
+						<PlanInspector
+							{trip}
+							seg={current.seg}
+							plan={current.plan}
+							{lang}
+							isDefault={(current.seg.defaultPlan ?? current.seg.plans[0].id) === current.plan.id}
+							{onedit}
+							onadd={addPlanVariant}
+							onduplicate={duplicatePlanVariant}
+							onremove={removePlanVariant}
+							onmove={movePlanVariant}
+							onsetdefault={setDefaultPlanToCurrent}
+							canMoveUp={current.seg.plans.indexOf(current.plan) > 0}
+							canMoveDown={current.seg.plans.indexOf(current.plan) < current.seg.plans.length - 1}
+							canRemove={current.seg.plans.length > 1}
+						/>
+					{/if}
 				</div>
 			{/if}
 			{#if showBudget}
@@ -1580,7 +1660,7 @@
 		   below 960px, where the sidebar is gone and these drive navigation). */
 		.daynav,
 		.daynav-sentinel,
-		.vtabs {
+		.vtabs:not(.vtabs-edit) {
 			display: none;
 		}
 		/* Align the hero's horizontal padding to the day body's 24px so the eyebrow/

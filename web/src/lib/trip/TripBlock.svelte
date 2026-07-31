@@ -55,7 +55,8 @@
 		onmove,
 		ongrab,
 		canMoveUp = false,
-		canMoveDown = false
+		canMoveDown = false,
+		showDiff = false
 	}: {
 		trip: Trip;
 		lang: string;
@@ -94,6 +95,8 @@
 		ongrab?: (e: Event) => void;
 		canMoveUp?: boolean;
 		canMoveDown?: boolean;
+		/** Segment has plan variants, so the diff annotation is meaningful. */
+		showDiff?: boolean;
 	} = $props();
 
 	const L = (obj: Parameters<typeof loc>[1]) => loc(trip, obj, lang);
@@ -206,6 +209,7 @@
 					{onmove}
 					{canMoveUp}
 					{canMoveDown}
+					{showDiff}
 				/>
 			{/if}
 		</div>

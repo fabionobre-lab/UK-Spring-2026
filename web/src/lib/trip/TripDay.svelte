@@ -369,6 +369,7 @@
 						ongrab={grabBlock}
 						canMoveUp={bi > 0}
 						canMoveDown={bi < blockItems.length - 1}
+						showDiff={seg.plans.length > 1}
 					/>
 				{/each}
 			</div>

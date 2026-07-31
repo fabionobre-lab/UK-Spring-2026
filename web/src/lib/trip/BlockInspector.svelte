@@ -25,7 +25,8 @@
 		onremove,
 		onmove,
 		canMoveUp = false,
-		canMoveDown = false
+		canMoveDown = false,
+		showDiff = false
 	}: {
 		block: Block;
 		trip: Trip;
@@ -39,6 +40,9 @@
 		onmove?: (dir: -1 | 1) => void;
 		canMoveUp?: boolean;
 		canMoveDown?: boolean;
+		/** The segment has more than one plan variant, so the diff annotation is
+		 *  meaningful here. Off otherwise — it would be noise on every stop. */
+		showDiff?: boolean;
 	} = $props();
 
 	let seq = idCounter++;
@@ -105,6 +109,26 @@
 	function onPickPlace(p: { name: string; lat: number; lon: number }) {
 		block.coords = { lat: p.lat, lon: p.lon };
 		if (!block.mapsUrl) block.mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(p.name)}`;
+		onedit?.();
+	}
+
+	// ── Plan-diff annotation ──
+	// How this stop compares with the segment's other plan variant. Meaningless
+	// on a single-plan segment, so the control only appears when `showDiff` is
+	// set. Both `kind` and `reason` are required together.
+	const diffKind = $derived(block.diff?.kind ?? 'none');
+	function setDiffKind(kind: string) {
+		if (kind === 'none') block.diff = undefined;
+		else
+			block.diff = {
+				kind: kind as 'added' | 'changed' | 'kept',
+				reason: block.diff?.reason ?? Object.fromEntries(trip.languages.map((l) => [l, '']))
+			};
+		onedit?.(true);
+	}
+	function setDiffReason(value: string) {
+		if (!block.diff) return;
+		block.diff.reason[lang] = value;
 		onedit?.();
 	}
 
@@ -317,6 +341,27 @@
 					</select>
 				</label>
 			</div>
+
+			{#if showDiff}
+				<div class="f">
+					<span class="lbl">{t('block.diffKind')}</span>
+					<select value={diffKind} onchange={(e) => setDiffKind(e.currentTarget.value)}>
+						<option value="none">{t('block.diffNone')}</option>
+						<option value="added">{t('block.diffAdded')}</option>
+						<option value="changed">{t('block.diffChanged')}</option>
+						<option value="kept">{t('block.diffKept')}</option>
+					</select>
+					{#if block.diff}
+						<input
+							type="text"
+							value={block.diff.reason?.[lang] ?? ''}
+							oninput={(e) => setDiffReason(e.currentTarget.value)}
+							placeholder={t('block.diffReason')}
+							aria-label={t('block.diffReason')}
+						/>
+					{/if}
+				</div>
+			{/if}
 
 			<div class="f">
 				<div class="sub-hd">

@@ -107,6 +107,10 @@ export function pruneEmpty(value: unknown, keepEmptyStr = false): unknown {
 		// typing it" would be rejected.
 		const isChecklist = 'title' in v && Array.isArray(v.items);
 		const isChecklistItem = 'text' in v && 'done' in v;
+		// A segment's title is required too, and a segment added on the itinerary
+		// starts blank — without this the whole trip is unsaveable from the moment
+		// you add one until you happen to type a title.
+		const isSegment = Array.isArray(v.plans);
 		const out: Record<string, unknown> = {};
 		for (const [k, val] of Object.entries(v)) {
 			// Preserve empties for required scaffolding fields, and propagate the
@@ -116,7 +120,8 @@ export function pruneEmpty(value: unknown, keepEmptyStr = false): unknown {
 				(isDay && k === 'title') ||
 				(isBlock && (k === 'title' || k === 'time')) ||
 				(isChecklist && k === 'title') ||
-				(isChecklistItem && k === 'text');
+				(isChecklistItem && k === 'text') ||
+				(isSegment && k === 'title');
 			const p = pruneEmpty(val, keepChild);
 			if (p !== undefined) out[k] = p;
 		}

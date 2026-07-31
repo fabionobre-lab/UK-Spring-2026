@@ -73,7 +73,7 @@ export const guide: GuideCatalog = {
 						id: 'trip-view',
 						title: 'Trip view',
 						body: [
-							'The read-through view of a trip: a day-by-day itinerary with times, places, notes and a map, organised into stops. This is what you see when you open a trip, and what anyone you share it with sees too.',
+							'The read-through view of a trip: a day-by-day itinerary with times, places, notes and a map, grouped into segments. This is what you see when you open a trip, and what anyone you share it with sees too.',
 							"Each day also shows a weather forecast, when the trip is close enough in time for one to be available. For trips that have already happened, the editor can instead record the weather that actually happened, so the day still shows something useful."
 						]
 					},
@@ -87,6 +87,7 @@ export const guide: GuideCatalog = {
 							'To change the shape of a day rather than its words: hover between two stops for the + that adds one above, use Add a stop at the end of the day, drag the ⠿ handle on the left rail to reorder, and use Duplicate or Delete inside a stop’s ⋮ panel (which also has arrows for moving a stop up or down without dragging).',
 							"The day itself has its own ⋮ beside the date at the top of the day, holding the day's date, route mode, a walking-distance override and the stored weather used for past trips — plus Add day, Duplicate and Delete. A new or duplicated day takes the first free date after the one you were on, so days never end up sharing a date; if that puts it out of sequence the panel says so, and you can set the date you want.",
 							'Changing a day’s date unlinks any photos placed on that day, because photos remember the date they belong to. The panel tells you how many are affected before you change it, and you can re-place them from the photo viewer afterwards.',
+							"The segment — the run of days in one place, whose name sits at the top of the trip — has a ⋮ of its own beside that name. It holds the colour theme and any custom colours overriding it, the location and timezone used for weather forecasts, which plan variant opens by default, and the segment's internal id, plus Add segment, Duplicate and Delete.",
 							'Changes save on their own about a second after you stop typing; a small label near the top shows Unsaved, Saving… and then Saved, so you never have to hunt for a save button. Undo and redo buttons sit beside that label, and Ctrl+Z / ⌘Z works too — inside a text field it undoes your typing, as in any text box; anywhere else it steps back through changes like adding or deleting a stop. Deleting always offers an Undo on the message it shows.',
 							'If a change leaves the trip incomplete — emptying a day of all its stops, say — saving pauses and says so rather than storing something broken. Your edits stay on screen; put a stop back and it saves immediately.',
 							'You are always editing the language you are currently reading. Switch the EN/PT toggle in the trip header and you edit that language instead, leaving the other one untouched.',
@@ -226,7 +227,7 @@ export const guide: GuideCatalog = {
 					{
 						id: 'glossary-trip',
 						title: 'Trip',
-						body: ['A single itinerary — one or more stops, each with its own days and schedule.']
+						body: ['A single itinerary — one or more segments (Florence, Rome, the Amalfi Coast…), each with its own days and schedule. Within a day, the individual places and activities are called stops.']
 					},
 					{
 						id: 'glossary-itinerary-day',
@@ -350,6 +351,7 @@ export const guide: GuideCatalog = {
 							'Para mudar a estrutura de um dia, e não o texto: passe o cursor entre duas paradas para ver o + que adiciona uma acima, use Adicionar uma parada no fim do dia, arraste a alça ⠿ na régua à esquerda para reordenar, e use Duplicar ou Excluir dentro do painel ⋮ da parada (que também tem setas para mover a parada para cima ou para baixo sem arrastar).',
 							'O próprio dia tem um ⋮ ao lado da data, no topo do dia, com a data, o modo de rota, um ajuste da distância a pé e o clima registrado usado em viagens passadas — além de Adicionar dia, Duplicar e Excluir. Um dia novo ou duplicado recebe a primeira data livre depois daquele em que você estava, então dois dias nunca ficam com a mesma data; se isso deixar o dia fora de ordem, o painel avisa e você ajusta a data.',
 							'Mudar a data de um dia desvincula as fotos colocadas nele, porque cada foto guarda a data à qual pertence. O painel mostra quantas serão afetadas antes de você mudar, e depois dá para recolocá-las pelo visualizador de fotos.',
+							'O trecho — a sequência de dias em um mesmo lugar, cujo nome aparece no topo da viagem — tem um ⋮ próprio ao lado desse nome. Ele reúne o tema de cores e as cores personalizadas que o substituem, o local e o fuso usados na previsão do tempo, qual variante de plano abre por padrão e o id interno do trecho, além de Adicionar trecho, Duplicar e Excluir.',
 							'As alterações são salvas sozinhas cerca de um segundo depois que você para de digitar; uma etiqueta pequena no topo mostra Não salvo, Salvando… e depois Salvo, então você nunca precisa procurar um botão de salvar. Os botões de desfazer e refazer ficam ao lado dessa etiqueta, e Ctrl+Z / ⌘Z também funciona — dentro de um campo de texto ele desfaz a digitação, como em qualquer caixa de texto; fora dele, volta um passo em mudanças como adicionar ou excluir uma parada. Excluir sempre oferece Desfazer na mensagem que aparece.',
 							'Se uma alteração deixar a viagem incompleta — esvaziar um dia de todas as paradas, por exemplo — o salvamento é pausado e avisa, em vez de guardar algo quebrado. Suas edições continuam na tela; devolva uma parada e ela é salva na hora.',
 							'Você sempre edita o idioma que está lendo no momento. Troque o botão EN/PT no cabeçalho da viagem e passa a editar aquele idioma, sem mexer no outro.',
@@ -489,7 +491,7 @@ export const guide: GuideCatalog = {
 					{
 						id: 'glossary-trip',
 						title: 'Viagem',
-						body: ['Um roteiro único — uma ou mais paradas, cada uma com seus próprios dias e programação.']
+						body: ['Um roteiro único — um ou mais trechos (Florença, Roma, a Costa Amalfitana…), cada um com seus próprios dias e programação. Dentro de um dia, os lugares e atividades individuais são chamados de paradas.']
 					},
 					{
 						id: 'glossary-itinerary-day',

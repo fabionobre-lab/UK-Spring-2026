@@ -289,6 +289,10 @@ export interface Messages {
 	'dialog.discard': string; // danger confirm-button label for the discard-changes dialog
 
 	// ── Segment editor (SegmentEditor.svelte) ──
+	/** Segment inspector on the itinerary itself (Phase 8 WYSIWYG). */
+	'seg.editDetails': string;
+	'seg.addSegment': string;
+	'seg.removed': string;
 	'seg.dragReorder': string;
 	'seg.moveUp': string;
 	'seg.moveDown': string;
@@ -885,6 +889,9 @@ const enGB: Messages = {
 	'toast.publicLinkRevoked': 'Public link revoked.',
 	'dialog.discard': 'Discard',
 
+	'seg.editDetails': 'Segment details',
+	'seg.addSegment': 'Add segment',
+	'seg.removed': 'Segment deleted.',
 	'seg.dragReorder': 'Drag to reorder segment',
 	'seg.moveUp': 'Move segment up',
 	'seg.moveDown': 'Move segment down',
@@ -1468,6 +1475,9 @@ const ptBR: Messages = {
 	'toast.publicLinkRevoked': 'Link público revogado.',
 	'dialog.discard': 'Descartar',
 
+	'seg.editDetails': 'Detalhes do trecho',
+	'seg.addSegment': 'Adicionar trecho',
+	'seg.removed': 'Trecho excluído.',
 	'seg.dragReorder': 'Arraste para reordenar o trecho',
 	'seg.moveUp': 'Mover trecho para cima',
 	'seg.moveDown': 'Mover trecho para baixo',

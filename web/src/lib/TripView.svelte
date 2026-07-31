@@ -34,7 +34,8 @@
 	import TripDay from './trip/TripDay.svelte';
 	import PhotoStrip from './trip/PhotoStrip.svelte';
 	import EditableText from './trip/EditableText.svelte';
-	import { blankDay, isoAddDays } from './editor/factories';
+	import SegmentInspector from './trip/SegmentInspector.svelte';
+	import { blankDay, blankSegment, isoAddDays, nextId } from './editor/factories';
 	import { toast, dismissToast } from './toast';
 	import { t } from './i18n/store.svelte';
 	import { tripChrome } from './i18n/tripChrome';
@@ -207,6 +208,98 @@
 		c.plan.days.splice(j, 0, d);
 		onedit?.(true);
 		dayIdx = clampedIdx + dir;
+	}
+
+	// ── Segment-level structural editing (Phase 8) ──
+	// `dayIdx` is a global index across every segment's days, so any segment op
+	// has to recompute where the selection should land. This mirrors
+	// computeFlatDays' walk exactly — keep them in step.
+	function firstDayIndexOfSegment(si: number): number {
+		let gi = 0;
+		for (let i = 0; i < si && i < trip.segments.length; i++) {
+			const s = trip.segments[i];
+			const p = s.plans.find((x) => x.id === planBySeg[s.id]) ?? s.plans[0];
+			gi += p.days.length;
+		}
+		return gi;
+	}
+	function segIndex(): number {
+		return current ? trip.segments.indexOf(current.seg) : -1;
+	}
+	/** Every day in the trip, across all plans — the collision set new dates must
+	 *  avoid, and the source of the trip's last date. */
+	function allTripDays(): Day[] {
+		return trip.segments.flatMap((s) => s.plans.flatMap((p) => p.days));
+	}
+	function lastTripDate(): string {
+		const dates = allTripDays()
+			.map((d) => d.date)
+			.filter(Boolean)
+			.sort();
+		return dates.length ? dates[dates.length - 1] : '';
+	}
+	function insertSegmentAfter() {
+		const si = segIndex();
+		if (si < 0) return;
+		const s = blankSegment(
+			trip.languages,
+			nextId('segment', trip.segments.map((x) => x.id))
+		);
+		// blankSegment's day carries no date, and an undated day fails the schema —
+		// the whole trip would sit unsaveable until you noticed. Start it after the
+		// trip's last day. (Computed before the splice, so the new segment's own
+		// day isn't in the collision set.)
+		s.plans[0].days[0].date = nextFreeDate(allTripDays(), lastTripDate());
+		trip.segments.splice(si + 1, 0, s);
+		onedit?.(true);
+		dayIdx = firstDayIndexOfSegment(si + 1);
+	}
+	function duplicateSegment() {
+		const si = segIndex();
+		if (si < 0) return;
+		const copy = structuredClone($state.snapshot(trip.segments[si])) as Segment;
+		// Segment ids must be unique — plan selection is stored against them.
+		copy.id = nextId(copy.id || 'segment', trip.segments.map((x) => x.id));
+		// A verbatim copy repeats every date, and duplicate dates make the nav's
+		// date walk skip days. Re-date the copy consecutively after the trip's last
+		// day; each plan is a variant of the same days, so all plans share the run.
+		const start = nextFreeDate(allTripDays(), lastTripDate());
+		for (const p of copy.plans) {
+			let cursor = start;
+			for (const d of p.days) {
+				d.date = cursor;
+				cursor = isoAddDays(cursor, 1);
+			}
+		}
+		trip.segments.splice(si + 1, 0, copy);
+		onedit?.(true);
+		dayIdx = firstDayIndexOfSegment(si + 1);
+	}
+	function removeSegment() {
+		const si = segIndex();
+		if (si < 0 || trip.segments.length <= 1) return; // schema: minItems 1
+		trip.segments.splice(si, 1);
+		onedit?.(true);
+		// Land on the start of whichever segment now occupies this slot (or the
+		// one before it, if we removed the last).
+		dayIdx = firstDayIndexOfSegment(Math.min(si, trip.segments.length - 1));
+		toast.danger(t('seg.removed'), {
+			actionLabel: t('common.undo'),
+			onAction: () => {
+				onundo?.();
+				dismissToast();
+			}
+		});
+	}
+	function moveSegment(dir: -1 | 1) {
+		const si = segIndex();
+		if (si < 0) return;
+		const j = si + dir;
+		if (j < 0 || j >= trip.segments.length) return;
+		const [s] = trip.segments.splice(si, 1);
+		trip.segments.splice(j, 0, s);
+		onedit?.(true);
+		dayIdx = firstDayIndexOfSegment(j);
 	}
 
 	const isPast = untrack(() => tripIsPast(trip));
@@ -757,6 +850,20 @@
 				{@const cur = current.seg}
 				<div class="trip-title">
 					<EditableText bind:value={cur.title} {lang} {edit} {onedit} label={uiText.edSegTitle} />
+					{#if edit}
+						<SegmentInspector
+							{trip}
+							seg={cur}
+							{onedit}
+							oninsert={insertSegmentAfter}
+							onduplicate={duplicateSegment}
+							onremove={removeSegment}
+							onmove={moveSegment}
+							canMoveUp={trip.segments.indexOf(cur) > 0}
+							canMoveDown={trip.segments.indexOf(cur) < trip.segments.length - 1}
+							canRemove={trip.segments.length > 1}
+						/>
+					{/if}
 				</div>
 				<div class="trip-sub">
 					<EditableText bind:value={cur.subtitle} {lang} {edit} {onedit} label={uiText.edSegSubtitle} />
@@ -1167,6 +1274,12 @@
 		font-weight: 700;
 		color: #fff;
 		line-height: 1.05;
+		/* While editing, the segment's ⋮ sits beside the title. Flex with a single
+		   child lays out identically to the block box it replaces, so read mode is
+		   unaffected. */
+		display: flex;
+		align-items: center;
+		gap: 4px;
 	}
 	.trip-sub {
 		font-size: 11px;

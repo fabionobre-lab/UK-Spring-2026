@@ -138,6 +138,31 @@
 		onedit?.(true);
 	}
 
+	// ── Waypoints ──
+	// Intermediate places within this stop, merged into the Day Route's numbered
+	// stop list and its Maps directions URL. `query` is a Maps place query;
+	// `name` is localized, and — like every other text field in this editing
+	// surface — is edited in the language currently being viewed.
+	function addWaypoint() {
+		if (!block.waypoints) block.waypoints = [];
+		block.waypoints.push({
+			query: '',
+			name: Object.fromEntries(trip.languages.map((l) => [l, '']))
+		});
+		onedit?.(true);
+	}
+	function removeWaypoint(i: number) {
+		block.waypoints?.splice(i, 1);
+		if (block.waypoints && block.waypoints.length === 0) block.waypoints = undefined;
+		onedit?.(true);
+	}
+	function setWaypointName(i: number, value: string) {
+		const wp = block.waypoints?.[i];
+		if (!wp) return;
+		wp.name[lang] = value;
+		onedit?.();
+	}
+
 	function addLink() {
 		// Assign, then read `block.links` back before pushing: `(x ??= [])`
 		// evaluates to the RAW array, and mutating that bypasses the $state proxy,
@@ -274,6 +299,26 @@
 				{#if block.checklist}
 					<p class="hintline">{t('block.checklistInlineHint')}</p>
 				{/if}
+			</div>
+
+			<div class="f">
+				<div class="sub-hd">
+					<span class="lbl">{t('block.waypoints')}</span>
+					<button type="button" class="mini" onclick={addWaypoint}>+ {t('common.add')}</button>
+				</div>
+				{#each block.waypoints ?? [] as wp, i (i)}
+					<div class="spotrow">
+						<input
+							type="text"
+							value={wp.name?.[lang] ?? ''}
+							oninput={(e) => setWaypointName(i, e.currentTarget.value)}
+							placeholder="{t('block.name')} ({lang.toUpperCase()})"
+							aria-label="{t('block.name')} ({lang.toUpperCase()})"
+						/>
+						<input type="text" bind:value={wp.query} placeholder="Place+Query+For+Maps" aria-label={t('block.waypointQueryAria')} />
+						<button type="button" class="del spotdel" onclick={() => removeWaypoint(i)} aria-label={t('block.removeWaypointAria')}>✕</button>
+					</div>
+				{/each}
 			</div>
 
 			<div class="f">

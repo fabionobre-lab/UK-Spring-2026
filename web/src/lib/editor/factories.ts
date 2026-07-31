@@ -140,6 +140,16 @@ export function pruneEmpty(value: unknown, keepEmptyStr = false): unknown {
 			out.links = (out.links as Record<string, unknown>[]).filter((l) => typeof l.url === 'string');
 			if (!(out.links as unknown[]).length) delete out.links;
 		}
+		// A waypoint requires both a query and a name (schema). A row added in the
+		// block inspector starts blank and is filled in afterwards, and a query-less
+		// waypoint would also inject an empty segment into the day-route URL — so
+		// drop incomplete ones rather than let them block saving or corrupt routes.
+		if (Array.isArray(out.waypoints)) {
+			out.waypoints = (out.waypoints as Record<string, unknown>[]).filter(
+				(w) => typeof w.query === 'string' && w.query !== '' && !!w.name && typeof w.name === 'object'
+			);
+			if (!(out.waypoints as unknown[]).length) delete out.waypoints;
+		}
 		// A photo spot requires BOTH a name and an http(s) maps URL (schema).
 		// Half-filled entries are the normal intermediate state while adding one
 		// in the block inspector, so drop them rather than block every autosave

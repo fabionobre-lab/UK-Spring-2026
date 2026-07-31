@@ -82,7 +82,7 @@ export const guide: GuideCatalog = {
 						title: 'Editing a trip in place',
 						body: [
 							'Press Edit on a trip and the itinerary itself becomes editable — you change the words where they are, in the finished trip, rather than in a separate form. Click any title, description or note and type. Empty fields show a faint prompt where you can add a description or a note for the day.',
-							'Everything about a stop that is not free text — its time, tags, cost, walking distance, map location, photo spots and booking links — lives behind the ⋮ button on that stop. It opens a small panel for that one stop (a sheet from the bottom of the screen on a phone), so you are never handed the whole trip as a form. The Find place search fills in the map location for you.',
+							'Everything about a stop that is not free text — its time, tags, cost, walking distance, map location, waypoints, photo spots and booking links — lives behind the ⋮ button on that stop. It opens a small panel for that one stop (a sheet from the bottom of the screen on a phone), so you are never handed the whole trip as a form. The Find place search fills in the map location for you.',
 							"A stop's checklist is edited on the stop itself: click its heading or any item to reword them, ✕ to drop an item, and + to add one. Use the ⋮ panel to add a checklist to a stop that has none, or to remove it entirely. Ticking items off works whether or not you are editing.",
 							'To change the shape of a day rather than its words: hover between two stops for the + that adds one above, use Add a stop at the end of the day, drag the ⠿ handle on the left rail to reorder, and use Duplicate or Delete inside a stop’s ⋮ panel (which also has arrows for moving a stop up or down without dragging).',
 							'Changes save on their own about a second after you stop typing; a small label near the top shows Unsaved, Saving… and then Saved, so you never have to hunt for a save button. Undo and redo buttons sit beside that label, and Ctrl+Z / ⌘Z works too — inside a text field it undoes your typing, as in any text box; anywhere else it steps back through changes like adding or deleting a stop. Deleting always offers an Undo on the message it shows.',
@@ -234,6 +234,14 @@ export const guide: GuideCatalog = {
 						]
 					},
 					{
+						id: 'glossary-waypoint',
+						title: 'Waypoint',
+						body: [
+							"An intermediate place within a single stop. A stop is where you are; its waypoints are what you pass through while there — a park walk might list the lake, the gardens and the fountain. They appear as their own numbered entries in the Day Route, and the route you open in Google Maps threads through them in order.",
+							'Add or edit them in a stop’s ⋮ panel while editing the trip.'
+						]
+					},
+					{
 						id: 'glossary-share-link',
 						title: 'Share link',
 						body: [
@@ -335,7 +343,7 @@ export const guide: GuideCatalog = {
 						title: 'Editar uma viagem no próprio roteiro',
 						body: [
 							'Toque em Editar em uma viagem e o próprio roteiro fica editável — você altera o texto onde ele está, na viagem pronta, em vez de em um formulário separado. Clique em qualquer título, descrição ou nota e digite. Campos vazios mostram uma indicação discreta onde você pode adicionar uma descrição ou uma nota para o dia.',
-							'Tudo em uma parada que não é texto livre — horário, etiquetas, custo, distância a pé, local no mapa, pontos de foto e links de reserva — fica atrás do botão ⋮ daquela parada. Ele abre um painel pequeno só daquela parada (uma folha que sobe pela base da tela no celular), então você nunca recebe a viagem inteira como formulário. A busca Encontrar lugar preenche o local no mapa para você.',
+							'Tudo em uma parada que não é texto livre — horário, etiquetas, custo, distância a pé, local no mapa, pontos de passagem, pontos de foto e links de reserva — fica atrás do botão ⋮ daquela parada. Ele abre um painel pequeno só daquela parada (uma folha que sobe pela base da tela no celular), então você nunca recebe a viagem inteira como formulário. A busca Encontrar lugar preenche o local no mapa para você.',
 							'A lista de verificação de uma parada é editada na própria parada: clique no título ou em qualquer item para reescrevê-los, ✕ para remover um item e + para adicionar. Use o painel ⋮ para adicionar uma lista a uma parada que não tem nenhuma, ou para removê-la. Marcar os itens funciona estando ou não em modo de edição.',
 							'Para mudar a estrutura de um dia, e não o texto: passe o cursor entre duas paradas para ver o + que adiciona uma acima, use Adicionar uma parada no fim do dia, arraste a alça ⠿ na régua à esquerda para reordenar, e use Duplicar ou Excluir dentro do painel ⋮ da parada (que também tem setas para mover a parada para cima ou para baixo sem arrastar).',
 							'As alterações são salvas sozinhas cerca de um segundo depois que você para de digitar; uma etiqueta pequena no topo mostra Não salvo, Salvando… e depois Salvo, então você nunca precisa procurar um botão de salvar. Os botões de desfazer e refazer ficam ao lado dessa etiqueta, e Ctrl+Z / ⌘Z também funciona — dentro de um campo de texto ele desfaz a digitação, como em qualquer caixa de texto; fora dele, volta um passo em mudanças como adicionar ou excluir uma parada. Excluir sempre oferece Desfazer na mensagem que aparece.',
@@ -484,6 +492,14 @@ export const guide: GuideCatalog = {
 						title: 'Dia do roteiro',
 						body: [
 							'Um dia dentro da programação de uma viagem: uma data, um título e uma nota opcionais, e uma lista de blocos com horário (lugares, atividades, deslocamentos).'
+						]
+					},
+					{
+						id: 'glossary-waypoint',
+						title: 'Ponto de passagem',
+						body: [
+							'Um lugar intermediário dentro de uma mesma parada. A parada é onde você está; os pontos de passagem são por onde você passa enquanto está ali — uma caminhada por um parque pode listar o lago, os jardins e a fonte. Eles aparecem como entradas numeradas na Rota do Dia, e a rota que você abre no Google Maps passa por eles na ordem.',
+							'Adicione ou edite no painel ⋮ da parada enquanto edita a viagem.'
 						]
 					},
 					{

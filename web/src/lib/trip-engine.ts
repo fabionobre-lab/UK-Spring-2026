@@ -329,7 +329,15 @@ export function routePlaces(trip: Trip, blocks: Block[], lang: string): RoutePla
 			const m = b.mapsUrl.match(/[?&]q=([^&]+)/);
 			if (m) places.push({ q: m[1], name: loc(trip, b.title, lang) });
 		}
-		for (const w of b.waypoints ?? []) places.push({ q: w.query, name: loc(trip, w.name, lang) });
+		// Skip query-less waypoints. A row added in the block inspector is blank
+		// until it's filled in, and including it would put an empty numbered stop
+		// in the Day Route stepper and — worse — an empty path segment in the
+		// Maps directions URL, breaking the route for anyone who opened it
+		// mid-edit. Mirrors the pruning rule applied before saving.
+		for (const w of b.waypoints ?? []) {
+			if (!w.query) continue;
+			places.push({ q: w.query, name: loc(trip, w.name, lang) });
+		}
 	}
 	return places;
 }

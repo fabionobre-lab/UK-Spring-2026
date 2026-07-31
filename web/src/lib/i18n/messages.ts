@@ -403,6 +403,7 @@ export interface Messages {
 	'block.addChecklistItemAria': string;
 	'block.removeChecklistItemAria': string;
 	'block.removePhotoSpotAria': string;
+	'block.removeWaypointAria': string;
 	'block.insertBefore': string;
 	'block.addStop': string;
 	'block.delete': string;
@@ -980,6 +981,7 @@ const enGB: Messages = {
 	'block.addChecklistItemAria': 'Add a checklist item',
 	'block.removeChecklistItemAria': 'Remove this checklist item',
 	'block.removePhotoSpotAria': 'Remove this photo spot',
+	'block.removeWaypointAria': 'Remove this waypoint',
 	'block.insertBefore': 'Add a stop above this one',
 	'block.addStop': 'Add a stop',
 	'block.delete': 'Delete',
@@ -1553,6 +1555,7 @@ const ptBR: Messages = {
 	'block.addChecklistItemAria': 'Adicionar um item à lista',
 	'block.removeChecklistItemAria': 'Remover este item da lista',
 	'block.removePhotoSpotAria': 'Remover este ponto de foto',
+	'block.removeWaypointAria': 'Remover este ponto de passagem',
 	'block.insertBefore': 'Adicionar uma parada acima desta',
 	'block.addStop': 'Adicionar uma parada',
 	'block.delete': 'Excluir',

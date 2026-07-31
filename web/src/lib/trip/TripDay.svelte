@@ -65,7 +65,6 @@
 		photoToken,
 		spotImg,
 		checklistDone,
-		checklistKeyFor,
 		onToggleChecklist,
 		onopenlightbox,
 		onphotostopclick,
@@ -99,7 +98,6 @@
 		photoToken?: string;
 		spotImg: (spot: PhotoSpot) => string | undefined;
 		checklistDone: (bi: number, ii: number, item: ChecklistItem) => boolean;
-		checklistKeyFor: (bi: number, ii: number) => string;
 		onToggleChecklist: (bi: number, item: ChecklistItem, ii: number) => void;
 		onopenlightbox: (list: TripPhoto[], index: number) => void;
 		onphotostopclick: (blockIndex: number) => void;
@@ -321,7 +319,6 @@
 						{photoToken}
 						{spotImg}
 						checklistDone={(ii, item) => checklistDone(bi, ii, item)}
-						checklistKeyFor={(ii) => checklistKeyFor(bi, ii)}
 						onToggleChecklist={(item, ii) => onToggleChecklist(bi, item, ii)}
 						onopenphoto={(pi) => onopenlightbox(photosByBlock.get(bi) ?? [], pi)}
 						{edit}
@@ -359,7 +356,6 @@
 					{photoToken}
 					{spotImg}
 					checklistDone={(ii, item) => checklistDone(bi, ii, item)}
-					checklistKeyFor={(ii) => checklistKeyFor(bi, ii)}
 					onToggleChecklist={(item, ii) => onToggleChecklist(bi, item, ii)}
 					onopenphoto={(pi) => onopenlightbox(photosByBlock.get(bi) ?? [], pi)}
 				/>

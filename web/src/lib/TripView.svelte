@@ -802,7 +802,6 @@
 					{photoToken}
 					{spotImg}
 					checklistDone={(bi, ii, item) => checklistDone(seg, plan, day, bi, ii, item)}
-					checklistKeyFor={(bi, ii) => checklistKey(seg, plan, day, bi, ii)}
 					onToggleChecklist={(bi, item, ii) => toggleChecklistItem(seg, plan, day, bi, item, ii)}
 					onopenlightbox={openLightbox}
 					onphotostopclick={openBlockPhotos}

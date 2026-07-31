@@ -99,12 +99,24 @@ export function pruneEmpty(value: unknown, keepEmptyStr = false): unknown {
 		const v = value as Record<string, unknown>;
 		const isDay = Array.isArray(v.blocks);
 		const isBlock = 'time' in v && 'title' in v && !('blocks' in v) && !('days' in v);
+		// A checklist (title + items) and one of its items (text + done) both have
+		// required fields the schema won't accept as absent. A checklist added on
+		// the itinerary starts completely blank and is filled in afterwards, so
+		// its scaffolding has to survive pruning the same way a day's or a block's
+		// title does — otherwise every save between "add checklist" and "finish
+		// typing it" would be rejected.
+		const isChecklist = 'title' in v && Array.isArray(v.items);
+		const isChecklistItem = 'text' in v && 'done' in v;
 		const out: Record<string, unknown> = {};
 		for (const [k, val] of Object.entries(v)) {
 			// Preserve empties for required scaffolding fields, and propagate the
 			// flag into their localized child objects (so {en:''} survives).
 			const keepChild =
-				keepEmptyStr || (isDay && k === 'title') || (isBlock && (k === 'title' || k === 'time'));
+				keepEmptyStr ||
+				(isDay && k === 'title') ||
+				(isBlock && (k === 'title' || k === 'time')) ||
+				(isChecklist && k === 'title') ||
+				(isChecklistItem && k === 'text');
 			const p = pruneEmpty(val, keepChild);
 			if (p !== undefined) out[k] = p;
 		}
@@ -127,6 +139,20 @@ export function pruneEmpty(value: unknown, keepEmptyStr = false): unknown {
 		if (Array.isArray(out.links)) {
 			out.links = (out.links as Record<string, unknown>[]).filter((l) => typeof l.url === 'string');
 			if (!(out.links as unknown[]).length) delete out.links;
+		}
+		// A photo spot requires BOTH a name and an http(s) maps URL (schema).
+		// Half-filled entries are the normal intermediate state while adding one
+		// in the block inspector, so drop them rather than block every autosave
+		// until the row happens to be complete — same all-or-nothing rule as
+		// coords, cost and links above.
+		if (Array.isArray(out.photoSpots)) {
+			out.photoSpots = (out.photoSpots as Record<string, unknown>[]).filter(
+				(p) =>
+					typeof p.name === 'string' &&
+					typeof p.mapsUrl === 'string' &&
+					/^https?:\/\//i.test(p.mapsUrl)
+			);
+			if (!(out.photoSpots as unknown[]).length) delete out.photoSpots;
 		}
 		return Object.keys(out).length ? out : undefined;
 	}

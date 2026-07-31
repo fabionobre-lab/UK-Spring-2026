@@ -397,6 +397,12 @@ export interface Messages {
 	/** Structural editing on the itinerary itself (Phase 4 WYSIWYG): the
 	 *  insert affordance between stops, the add-a-stop button at the end of a
 	 *  day, the inspector's delete action, and its undo toast. */
+	/** Checklist + photo-spot editing on the itinerary itself. */
+	'block.addChecklist': string;
+	'block.checklistInlineHint': string;
+	'block.addChecklistItemAria': string;
+	'block.removeChecklistItemAria': string;
+	'block.removePhotoSpotAria': string;
 	'block.insertBefore': string;
 	'block.addStop': string;
 	'block.delete': string;
@@ -969,6 +975,11 @@ const enGB: Messages = {
 	'block.linkLabelAria': 'Booking link label',
 	'block.editDetails': 'Edit details',
 	'block.removeLinkAria': 'Remove this booking link',
+	'block.addChecklist': 'Add a checklist',
+	'block.checklistInlineHint': 'Edit the title and items on the stop itself.',
+	'block.addChecklistItemAria': 'Add a checklist item',
+	'block.removeChecklistItemAria': 'Remove this checklist item',
+	'block.removePhotoSpotAria': 'Remove this photo spot',
 	'block.insertBefore': 'Add a stop above this one',
 	'block.addStop': 'Add a stop',
 	'block.delete': 'Delete',
@@ -1537,6 +1548,11 @@ const ptBR: Messages = {
 	'block.linkLabelAria': 'Rótulo do link de reserva',
 	'block.editDetails': 'Editar detalhes',
 	'block.removeLinkAria': 'Remover este link de reserva',
+	'block.addChecklist': 'Adicionar uma lista',
+	'block.checklistInlineHint': 'Edite o título e os itens na própria parada.',
+	'block.addChecklistItemAria': 'Adicionar um item à lista',
+	'block.removeChecklistItemAria': 'Remover este item da lista',
+	'block.removePhotoSpotAria': 'Remover este ponto de foto',
 	'block.insertBefore': 'Adicionar uma parada acima desta',
 	'block.addStop': 'Adicionar uma parada',
 	'block.delete': 'Excluir',

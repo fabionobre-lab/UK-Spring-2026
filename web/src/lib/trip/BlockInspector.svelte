@@ -108,6 +108,36 @@
 		onedit?.();
 	}
 
+	// ── Checklist ──
+	// Only the existence of the list is managed here; its title and items are
+	// edited in place on the stop itself, where they render.
+	function addChecklist() {
+		block.checklist = {
+			title: Object.fromEntries(trip.languages.map((l) => [l, ''])),
+			items: [{ text: Object.fromEntries(trip.languages.map((l) => [l, ''])), done: false }]
+		};
+		onedit?.(true);
+	}
+	function removeChecklist() {
+		block.checklist = undefined;
+		onedit?.(true);
+	}
+
+	// ── Photo spots ──
+	// Four fields apiece (caption, maps URL, Wikipedia page, fallback image), so
+	// these are inspector rows rather than inline text — editing only the caption
+	// where it renders would leave the other three stranded.
+	function addPhotoSpot() {
+		if (!block.photoSpots) block.photoSpots = [];
+		block.photoSpots.push({ name: '', mapsUrl: '' });
+		onedit?.(true);
+	}
+	function removePhotoSpot(i: number) {
+		block.photoSpots?.splice(i, 1);
+		if (block.photoSpots && block.photoSpots.length === 0) block.photoSpots = undefined;
+		onedit?.(true);
+	}
+
 	function addLink() {
 		// Assign, then read `block.links` back before pushing: `(x ??= [])`
 		// evaluates to the RAW array, and mutating that bypasses the $state proxy,
@@ -230,6 +260,36 @@
 						{#each COST_CATEGORIES as c (c)}<option value={c}>{catLabels[c]}</option>{/each}
 					</select>
 				</label>
+			</div>
+
+			<div class="f">
+				<div class="sub-hd">
+					<span class="lbl">{t('block.checklist')}</span>
+					{#if block.checklist}
+						<button type="button" class="mini danger" onclick={removeChecklist}>✕ {t('block.checklistRemove')}</button>
+					{:else}
+						<button type="button" class="mini" onclick={addChecklist}>+ {t('block.addChecklist')}</button>
+					{/if}
+				</div>
+				{#if block.checklist}
+					<p class="hintline">{t('block.checklistInlineHint')}</p>
+				{/if}
+			</div>
+
+			<div class="f">
+				<div class="sub-hd">
+					<span class="lbl">{t('block.photoSpots')}</span>
+					<button type="button" class="mini" onclick={addPhotoSpot}>+ {t('common.add')}</button>
+				</div>
+				{#each block.photoSpots ?? [] as ps, i (i)}
+					<div class="spotrow">
+						<input type="text" bind:value={ps.name} placeholder={t('block.captionPlaceholder')} aria-label={t('block.photoCaptionAria')} />
+						<input type="text" bind:value={ps.mapsUrl} placeholder={t('block.photoMapsPlaceholder')} aria-label={t('block.photoMapsAria')} />
+						<input type="text" bind:value={ps.wiki} placeholder={t('block.wikiPlaceholder')} aria-label={t('block.wikiAria')} />
+						<input type="text" bind:value={ps.fallbackImg} placeholder={t('block.fallbackImgPlaceholder')} aria-label={t('block.fallbackImgAria')} />
+						<button type="button" class="del spotdel" onclick={() => removePhotoSpot(i)} aria-label={t('block.removePhotoSpotAria')}>✕</button>
+					</div>
+				{/each}
 			</div>
 
 			<div class="f">
@@ -453,7 +513,36 @@
 		align-items: center;
 		margin-bottom: 0.3rem;
 	}
-	.rowline input {
+	/* Photo spots stack their four fields, since two of them are URLs and would
+	   be unreadable squeezed into a 340px row. */
+	.spotrow {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 0.25rem 0.3rem;
+		align-items: start;
+		margin-bottom: 0.5rem;
+		padding-bottom: 0.5rem;
+		border-bottom: 1px dashed var(--hairline);
+	}
+	.spotrow input {
+		grid-column: 1;
+	}
+	.spotdel {
+		grid-column: 2;
+		grid-row: 1 / -1;
+		align-self: start;
+	}
+	.hintline {
+		margin: 0;
+		font-size: 0.7rem;
+		color: var(--text-muted);
+	}
+	.mini.danger {
+		color: var(--warn-fg);
+		border-color: color-mix(in srgb, var(--warn-bar) 50%, transparent);
+	}
+	.rowline input,
+	.spotrow input {
 		font-family: var(--font-ui);
 		font-size: 0.8rem;
 		color: var(--text);

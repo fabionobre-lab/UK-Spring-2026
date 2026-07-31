@@ -45,7 +45,6 @@
 		photoToken,
 		spotImg,
 		checklistDone,
-		checklistKeyFor,
 		onToggleChecklist,
 		onopenphoto,
 		edit = false,
@@ -79,7 +78,6 @@
 		spotImg: (spot: PhotoSpot) => string | undefined;
 		/** Rendered done-state of checklist item `ii` (may be an unsaved override). */
 		checklistDone: (ii: number, item: ChecklistItem) => boolean;
-		checklistKeyFor: (ii: number) => string;
 		onToggleChecklist: (item: ChecklistItem, ii: number) => void;
 		onopenphoto: (index: number) => void;
 		/** In-place editing: text fields become contenteditable in situ. */
@@ -106,6 +104,24 @@
 	// Offline-stale-weather hint (Phase 6 item 5): while offline a fetch can't
 	// have just succeeded, so any badge rendered at all is held-over/static data.
 	const offline = $derived(!isOnline());
+
+	// ── Checklist items ──
+	// Owned here rather than threaded through TripDay: the list lives on this
+	// block, and nothing above needs to know it changed beyond the usual
+	// structural-edit notification.
+	function addChecklistItem() {
+		if (!block.checklist) return;
+		block.checklist.items.push({
+			text: Object.fromEntries(trip.languages.map((l) => [l, ''])),
+			done: false
+		});
+		onedit?.(true);
+	}
+	function removeChecklistItem(ii: number) {
+		if (!block.checklist) return;
+		block.checklist.items.splice(ii, 1);
+		onedit?.(true);
+	}
 
 	const CATEGORY_EMOJI: Record<CostCategory, string> = {
 		lodging: '🛏️',
@@ -249,13 +265,14 @@
 			{@const doneCount = block.checklist.items.filter((it, ii) => checklistDone(ii, it)).length}
 			<div class="tb-checklist">
 				<div class="tb-checklist-hdr">
-					<span class="tb-checklist-title">{L(block.checklist.title)}</span>
+					<span class="tb-checklist-title">
+						<EditableText bind:value={block.checklist.title} {lang} {edit} {onedit} label={uiText.edChecklistTitle} />
+					</span>
 					<span class="tb-checklist-progress">{doneCount}/{block.checklist.items.length}</span>
 				</div>
 				<ul class="tb-checklist-items">
 					{#each block.checklist.items as item, ii (ii)}
 						{@const itemDone = checklistDone(ii, item)}
-						{@const itemKey = checklistKeyFor(ii)}
 						<li class="tb-checklist-item" class:done={itemDone}>
 							<label>
 								<input
@@ -263,11 +280,27 @@
 									checked={itemDone}
 									onchange={() => onToggleChecklist(item, ii)}
 								/>
-								<span class="tb-checklist-text">{L(item.text)}</span>
+								<span class="tb-checklist-text">
+									<EditableText bind:value={item.text} {lang} {edit} {onedit} label={uiText.edChecklistItem} />
+								</span>
 							</label>
+							{#if edit}
+								<button
+									type="button"
+									class="cl-del"
+									onclick={() => removeChecklistItem(ii)}
+									aria-label={t('block.removeChecklistItemAria')}
+									title={t('block.removeChecklistItemAria')}
+								>✕</button>
+							{/if}
 						</li>
 					{/each}
 				</ul>
+				{#if edit}
+					<button type="button" class="cl-add" onclick={addChecklistItem}>
+						+ {t('common.add')}
+					</button>
+				{/if}
 			</div>
 		{/if}
 		{#if block.photoSpots?.length}
@@ -658,6 +691,51 @@
 	.tb-checklist-item.done .tb-checklist-text {
 		color: var(--text-muted);
 		text-decoration: line-through;
+	}
+	/* Editing chrome on the list. The row becomes a flex line so the remove
+	   control sits at its end without disturbing the label's own layout. */
+	.tb-checklist-item {
+		display: flex;
+		align-items: flex-start;
+		gap: 4px;
+	}
+	.tb-checklist-item label {
+		flex: 1;
+		min-width: 0;
+	}
+	.cl-del {
+		flex-shrink: 0;
+		border: none;
+		background: none;
+		color: var(--text-muted);
+		cursor: pointer;
+		font-size: 10px;
+		line-height: 1;
+		padding: 3px 4px;
+		border-radius: var(--radius-sm);
+	}
+	@media (hover: hover) {
+		.cl-del:hover {
+			color: var(--warn-fg);
+			background: var(--warn-bg);
+		}
+	}
+	.cl-add {
+		margin-top: 5px;
+		border: 1px dashed var(--hairline-strong);
+		border-radius: var(--radius-md);
+		background: transparent;
+		color: var(--text-muted);
+		font-family: var(--font-ui);
+		font-size: 11px;
+		padding: 2px 8px;
+		cursor: pointer;
+	}
+	@media (hover: hover) {
+		.cl-add:hover {
+			border-color: var(--accent-text);
+			color: var(--accent-text);
+		}
 	}
 	.tb-photos {
 		margin-top: 8px;

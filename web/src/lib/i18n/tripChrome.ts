@@ -57,6 +57,8 @@ export interface TripChromeMessages {
 	edWarning: string;
 	edNote: string;
 	edFooter: string;
+	edChecklistTitle: string;
+	edChecklistItem: string;
 }
 
 export const tripChrome: Record<'en' | 'pt', TripChromeMessages> = {
@@ -96,7 +98,9 @@ export const tripChrome: Record<'en' | 'pt', TripChromeMessages> = {
 		edBlockDesc: 'Add a description…',
 		edWarning: 'Warning',
 		edNote: 'Note',
-		edFooter: 'Footer'
+		edFooter: 'Footer',
+		edChecklistTitle: 'Checklist title',
+		edChecklistItem: 'Checklist item'
 	},
 	pt: {
 		maps: 'Abrir no Maps',
@@ -134,7 +138,9 @@ export const tripChrome: Record<'en' | 'pt', TripChromeMessages> = {
 		edBlockDesc: 'Adicionar uma descrição…',
 		edWarning: 'Aviso',
 		edNote: 'Nota',
-		edFooter: 'Rodapé'
+		edFooter: 'Rodapé',
+		edChecklistTitle: 'Título da lista',
+		edChecklistItem: 'Item da lista'
 	}
 };
 

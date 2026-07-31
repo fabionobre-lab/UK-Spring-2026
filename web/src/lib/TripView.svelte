@@ -895,12 +895,12 @@
 					{#if printHref}
 						<a class="ics-btn" href={printHref} aria-label={uiText.printPdf}>
 							<svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7" /><path d="M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" rx="1" /></svg>
-							{uiText.printPdf}
+							<span class="btn-label">{uiText.printPdf}</span>
 						</a>
 					{/if}
 					<button class="ics-btn" onclick={downloadIcs} aria-label={uiText.addToCalendar}>
 						<svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
-						{uiText.addToCalendar}
+						<span class="btn-label">{uiText.addToCalendar}</span>
 					</button>
 					{#if trip.languages.length > 1}
 						<div class="lang-toggle">
@@ -1291,6 +1291,36 @@
 	.ics-btn,
 	.lang-toggle {
 		flex-shrink: 0;
+	}
+	/* ── Phones: give the title the top of the hero back ──
+	   With Portuguese labels at 390px the two action buttons and the language
+	   pill wrapped onto two lines — a 98px block of chrome sitting above the
+	   trip title, which is the one thing the screen is actually about. Below
+	   960px the buttons drop their text and become icon squares (the aria-label
+	   still carries the name), and the eyebrow takes a full line so the whole
+	   action group fits on one. Labels return at 960px, which is where the shell stops being a ~430px
+	   centred column and goes full-bleed. That column — not the viewport — is
+	   the real constraint: at a 768px viewport the hero is still only 398px
+	   wide, so a 600px or 768px breakpoint re-wrapped immediately. */
+	@media (max-width: 959.98px) {
+		.btn-label {
+			display: none;
+		}
+		.ics-btn {
+			width: 44px;
+			padding: 0;
+			justify-content: center;
+		}
+		.trip-eyebrow {
+			/* Own line, so the actions below it are a single unbroken row. */
+			flex: 1 0 100%;
+		}
+		.hero-actions {
+			/* Aligned with the eyebrow and title rather than ragged against the
+			   right edge, which is what the wrapped layout looked like. */
+			justify-content: flex-start;
+			margin-left: 0;
+		}
 	}
 	.ics-btn {
 		display: inline-flex;

@@ -318,28 +318,84 @@ export function flattenTripDays(trip: Trip): FlatTripDay[] {
 	return out;
 }
 
-export interface RoutePlace {
-	q: string;
-	name: string;
+/** The `q=` term of a `maps.google.com/?q=…` link, or null. */
+function mapsQuery(mapsUrl?: string): string | null {
+	const m = mapsUrl?.match(/[?&]q=([^&]+)/);
+	return m ? m[1] : null;
 }
-export function routePlaces(trip: Trip, blocks: Block[], lang: string): RoutePlace[] {
-	const places: RoutePlace[] = [];
-	for (const b of blocks) {
-		if (b.mapsUrl) {
-			const m = b.mapsUrl.match(/[?&]q=([^&]+)/);
-			if (m) places.push({ q: m[1], name: loc(trip, b.title, lang) });
+
+export interface DayStop {
+	/** 1-based position in the day, shared by the day map, the Day-Route
+	 *  stepper and the timeline dot — one place, one number, everywhere. */
+	n: number;
+	/** Index of the block this stop belongs to. */
+	blockIndex: number;
+	/** Set when the stop is one of the block's waypoints rather than the block
+	 *  itself, so the timeline can number blocks without claiming a waypoint. */
+	waypointIndex?: number;
+	name: string;
+	/** Maps query — present when the stop can join the directions URL. */
+	q?: string;
+	coords?: { lat: number; lon: number };
+}
+
+/** Number every locatable stop of a day, in time order (blocks are stored in
+ *  time order). A block earns a number when it carries coordinates or a Maps
+ *  query — the two things that let any surface point at it — and each of its
+ *  filled-in waypoints takes the next number after it.
+ *
+ *  Each surface then renders the subset it can show (pins need `coords`, the
+ *  stepper and the directions URL need `q`) while all of them agree on the
+ *  numbering. Before this existed the map counted coord-bearing blocks and the
+ *  stepper counted `mapsUrl`-bearing ones, so the same place carried different
+ *  numbers on the two panels whenever a block had one but not the other. */
+export function dayStops(trip: Trip, blocks: Block[], lang: string): DayStop[] {
+	const out: DayStop[] = [];
+	let n = 0;
+	blocks.forEach((b, blockIndex) => {
+		const q = mapsQuery(b.mapsUrl);
+		if (q || b.coords) {
+			out.push({
+				n: ++n,
+				blockIndex,
+				name: loc(trip, b.title, lang),
+				...(q ? { q } : {}),
+				...(b.coords ? { coords: b.coords } : {})
+			});
 		}
 		// Skip query-less waypoints. A row added in the block inspector is blank
 		// until it's filled in, and including it would put an empty numbered stop
 		// in the Day Route stepper and — worse — an empty path segment in the
 		// Maps directions URL, breaking the route for anyone who opened it
 		// mid-edit. Mirrors the pruning rule applied before saving.
-		for (const w of b.waypoints ?? []) {
-			if (!w.query) continue;
-			places.push({ q: w.query, name: loc(trip, w.name, lang) });
-		}
+		(b.waypoints ?? []).forEach((w, waypointIndex) => {
+			if (!w.query) return;
+			out.push({ n: ++n, blockIndex, waypointIndex, name: loc(trip, w.name, lang), q: w.query });
+		});
+	});
+	return out;
+}
+
+/** Stop number per block index, or null for a block no surface can locate. */
+export function blockStopNumbers(stops: DayStop[], blockCount: number): (number | null)[] {
+	const out: (number | null)[] = new Array(blockCount).fill(null);
+	for (const s of stops) {
+		if (s.waypointIndex === undefined && s.blockIndex < blockCount) out[s.blockIndex] = s.n;
 	}
-	return places;
+	return out;
+}
+
+export interface RoutePlace {
+	q: string;
+	name: string;
+	/** The shared stop number — not the position in this list, which skips
+	 *  stops that have coordinates but no Maps query. */
+	n: number;
+}
+export function routePlaces(trip: Trip, blocks: Block[], lang: string): RoutePlace[] {
+	return dayStops(trip, blocks, lang)
+		.filter((s): s is DayStop & { q: string } => !!s.q)
+		.map((s) => ({ q: s.q, name: s.name, n: s.n }));
 }
 
 export function routeUrl(places: RoutePlace[], routeMode?: string): string {

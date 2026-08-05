@@ -13,6 +13,9 @@ import type { CostCategory } from '../trip-engine';
 export interface TripChromeMessages {
 	maps: string;
 	dayRoute: string;
+	/** Screen-reader label for the numbered timeline dot ("Stop 5"), tying the
+	 *  block to its map pin and its place in the Day Route. */
+	stop: string;
 	openRoute: string;
 	addToCalendar: string;
 	/** Hero action + print-page button: open the printable, A4-formatted
@@ -65,6 +68,7 @@ export const tripChrome: Record<'en' | 'pt', TripChromeMessages> = {
 	en: {
 		maps: 'Open in Maps',
 		dayRoute: 'Day Route',
+		stop: 'Stop',
 		openRoute: 'Open route in Google Maps →',
 		addToCalendar: 'Add to calendar',
 		printPdf: 'Print / Save as PDF',
@@ -105,6 +109,7 @@ export const tripChrome: Record<'en' | 'pt', TripChromeMessages> = {
 	pt: {
 		maps: 'Abrir no Maps',
 		dayRoute: 'Rota do Dia',
+		stop: 'Parada',
 		openRoute: 'Abrir rota no Google Maps →',
 		addToCalendar: 'Adicionar ao calendário',
 		printPdf: 'Imprimir / Salvar PDF',

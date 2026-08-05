@@ -60,6 +60,7 @@
 		mapStops = [],
 		photoMapStops = [],
 		routeForDay = null,
+		stopNums = [],
 		badgeFor,
 		photosByBlock,
 		dayLevelPhotos = [],
@@ -100,6 +101,10 @@
 		mapStops?: MapStop[];
 		photoMapStops?: PhotoStop[];
 		routeForDay?: { url: string; places: RoutePlace[] } | null;
+		/** Shared stop number per block index (null where the block has neither
+		 *  coordinates nor a Maps link), so the timeline dot, the map pin and the
+		 *  Day-Route stepper all label the same place with the same number. */
+		stopNums?: (number | null)[];
 		/** Weather badge for a block's time, from TripView's fetch cache. */
 		badgeFor: (time: string) => { emoji: string; temp: number } | null;
 		photosByBlock: Map<number, TripPhoto[]>;
@@ -320,7 +325,7 @@
 					{#each routeForDay.places as p, i (i)}
 						{#if i > 0}<div class="route-connector"></div>{/if}
 						<div class="route-stop">
-							<div class="route-num">{i + 1}</div>
+							<div class="route-num">{p.n}</div>
 							<div class="route-name">{p.name}</div>
 						</div>
 					{/each}
@@ -352,6 +357,7 @@
 						{plan}
 						block={w.item}
 						index={bi}
+						stopNum={stopNums[bi] ?? null}
 						isLast={bi === blockItems.length - 1}
 						badge={badgeFor(w.item.time)}
 						{isPast}
@@ -389,6 +395,7 @@
 					{plan}
 					block={b}
 					index={bi}
+					stopNum={stopNums[bi] ?? null}
 					isLast={bi === day.blocks.length - 1}
 					isNext={isToday && nowMarkerIdx === bi}
 					badge={badgeFor(b.time)}
@@ -643,10 +650,13 @@
 		width: 22px;
 		height: 22px;
 		border-radius: 50%;
-		background: var(--accent);
-		color: #fff;
-		font-size: 10px;
-		font-weight: 600;
+		/* Same fill as the timeline's numbered dot (see TripBlock .tb-stop-num):
+		   both sit on the page surface, where solid --accent is a dark green on
+		   dark navy and barely reads. */
+		background: var(--accent-text);
+		color: var(--surface);
+		font-size: 11px;
+		font-weight: 700;
 		display: flex;
 		align-items: center;
 		justify-content: center;

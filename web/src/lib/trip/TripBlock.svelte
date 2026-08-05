@@ -36,6 +36,7 @@
 		lang,
 		block,
 		index,
+		stopNum = null,
 		isLast,
 		plan,
 		isNext = false,
@@ -63,6 +64,10 @@
 		block: Block;
 		/** Index within the day's blocks — the checklist/photo placement key. */
 		index: number;
+		/** This stop's number on the day map and in the Day-Route stepper, shown
+		 *  on the dot so a pin can be traced back to its stop. Null for a block
+		 *  no surface can locate (no coordinates, no Maps link). */
+		stopNum?: number | null;
 		/** Last block of the day: suppresses the connector line below the dot. */
 		isLast: boolean;
 		/** The day's plan, for `diffLabels` on a variant block. */
@@ -175,7 +180,16 @@
 			{/if}
 		</div>
 		<div class="tb-dot-col">
-			<div class="tb-dot" class:tb-dot-next={isNext} style="background:{block.dotColor || 'var(--text-muted)'}"></div>
+			{#if stopNum != null}
+				<div
+					class="tb-stop-num"
+					class:tb-dot-next={isNext}
+					style={block.dotColor ? `--dot:${block.dotColor}` : ''}
+					aria-label="{uiText.stop} {stopNum}"
+				>{stopNum}</div>
+			{:else}
+				<div class="tb-dot" class:tb-dot-next={isNext} style="background:{block.dotColor || 'var(--text-muted)'}"></div>
+			{/if}
 			{#if !isLast}<div class="tb-line"></div>{/if}
 		</div>
 	</div>
@@ -427,6 +441,36 @@
 		flex-shrink: 0;
 		border: 2px solid var(--surface);
 		box-shadow: 0 0 0 1px var(--hairline);
+	}
+	/* Numbered stop: the counterpart of the day-map pin, so the eye matches pin 5
+	   to stop 5 without a legend. Filled with --accent-text rather than --accent:
+	   the pin sits on the light map tiles, where solid accent reads strongly,
+	   while this one sits on the page surface — in dark mode accent is a dark
+	   green on dark navy and all but disappears there. --accent-text is the
+	   accent already tuned to be legible against the surface in both themes, so
+	   the disc takes it and the digit takes the surface colour back. */
+	.tb-stop-num {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 22px;
+		height: 22px;
+		margin-top: -6px;
+		border-radius: 50%;
+		flex-shrink: 0;
+		background: var(--accent-text);
+		color: var(--surface);
+		font-family: 'Source Serif 4', Georgia, serif;
+		font-size: 12px;
+		font-weight: 700;
+		line-height: 1;
+		/* A stop's own dot colour rings the disc instead of filling it: as a fill
+		   it can be any stored colour, and the digit on top would be a coin toss
+		   for legibility. */
+		box-shadow:
+			0 0 0 2px var(--surface),
+			0 0 0 3.5px var(--dot, transparent);
+		box-sizing: border-box;
 	}
 	.tb-line {
 		width: 1.5px;

@@ -19,6 +19,8 @@
 		tripIsPast,
 		routePlaces,
 		routeUrl,
+		dayStops,
+		blockStopNumbers,
 		tripCostTotal,
 		fetchSegmentWeather,
 		safeUrl,
@@ -733,6 +735,16 @@
 		return parts.join(';');
 	});
 
+	// ── Day stops ──
+	// One numbering for the whole day, shared by the map, the Day-Route stepper
+	// and the timeline dots (see dayStops in trip-engine). Names are localized
+	// for the active language, so switching languages re-derives them.
+	const stopsForDay = $derived(current ? dayStops(trip, current.day.blocks, lang) : []);
+	/** Stop number per block index — what the timeline dot shows. */
+	const blockStopNums = $derived(
+		current ? blockStopNumbers(stopsForDay, current.day.blocks.length) : []
+	);
+
 	// Route places for the current day
 	const routeForDay = $derived.by(() => {
 		if (!current) return null;
@@ -741,21 +753,20 @@
 		return { url: routeUrl(places, current.day.routeMode), places };
 	});
 
-	// ── Day map stops ──
-	// The current day's coord-bearing blocks, numbered in time order (blocks are
-	// stored in time order, so array order is time order). Popup title is
-	// localized for the active language, so switching languages re-renders them.
+	// Pins for the stops that carry coordinates, keeping their shared number —
+	// a stop with only a Maps query stays in the stepper and on the timeline but
+	// cannot be placed on the map, so the pin numbers may skip.
 	const dayMapStops = $derived.by<MapStop[]>(() => {
 		if (!current) return [];
-		const out: MapStop[] = [];
-		let n = 0;
-		for (const b of current.day.blocks) {
-			if (b.coords) {
-				n++;
-				out.push({ lat: b.coords.lat, lon: b.coords.lon, n, popup: `${b.time} — ${L(b.title)}` });
-			}
-		}
-		return out;
+		const times = current.day.blocks.map((b) => b.time);
+		return stopsForDay
+			.filter((s) => s.coords)
+			.map((s) => ({
+				lat: s.coords!.lat,
+				lon: s.coords!.lon,
+				n: s.n,
+				popup: `${times[s.blockIndex] ?? ''} — ${s.name}`
+			}));
 	});
 
 	// ── Linked Google Photos ──
@@ -1093,6 +1104,7 @@
 					mapStops={dayMapStops}
 					{photoMapStops}
 					{routeForDay}
+					stopNums={blockStopNums}
 					badgeFor={(time) => blockBadge(seg, day, time)}
 					{photosByBlock}
 					{dayLevelPhotos}

@@ -74,7 +74,8 @@ export const guide: GuideCatalog = {
 						title: 'Trip view',
 						body: [
 								'The read-through view of a trip: a day-by-day itinerary with times, places, notes and a map, grouped into segments. This is what you see when you open a trip, and what anyone you share it with sees too. On a phone, Print and Add to calendar live under More in the bottom bar; on a wider screen they sit in the trip header.',
-							"Each day also shows a weather forecast, when the trip is close enough in time for one to be available. For trips that have already happened, the editor can instead record the weather that actually happened, so the day still shows something useful."
+							"Each day also shows a weather forecast, when the trip is close enough in time for one to be available. For trips that have already happened, the editor can instead record the weather that actually happened, so the day still shows something useful.",
+							'Every stop the app can locate is numbered, and that number is the same in all three places it appears: on the dot beside the time, on the pin on the day map, and in the Day Route strip under it. Stop 5 is pin 5. A stop that has a Maps link but no map location is still numbered and still joins the route, it simply cannot be pinned — so pin numbers may skip. Set a missing location with Find place in the stop’s ⋮ panel.'
 						]
 					},
 					{
@@ -339,7 +340,8 @@ export const guide: GuideCatalog = {
 						title: 'Visualização da viagem',
 						body: [
 							'A visão de leitura de uma viagem: um roteiro dia a dia com horários, lugares, notas e um mapa, agrupado em trechos. No celular, Imprimir e Adicionar ao calendário ficam em Mais, na barra inferior; em telas maiores ficam no cabeçalho da viagem. É o que você vê ao abrir uma viagem, e o que qualquer pessoa com quem você a compartilha também vê.',
-							'Cada dia também mostra uma previsão do tempo, quando a viagem está próxima o suficiente para haver uma previsão disponível. Para viagens que já aconteceram, o editor pode registrar o tempo que realmente fez, para que o dia continue mostrando algo útil.'
+							'Cada dia também mostra uma previsão do tempo, quando a viagem está próxima o suficiente para haver uma previsão disponível. Para viagens que já aconteceram, o editor pode registrar o tempo que realmente fez, para que o dia continue mostrando algo útil.',
+							'Toda parada que o app consegue localizar recebe um número, e é o mesmo número nos três lugares onde ele aparece: no ponto ao lado do horário, no pino do mapa do dia e na régua Rota do Dia embaixo dele. A parada 5 é o pino 5. Uma parada que tem link de mapa mas não tem local no mapa continua numerada e continua na rota, só não pode ser fixada — por isso os números dos pinos podem pular. Para definir o local que falta, use Encontrar lugar no painel ⋮ da parada.'
 						]
 					},
 					{

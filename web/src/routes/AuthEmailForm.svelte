@@ -16,7 +16,7 @@
 	// Back to sign in" toggle can live at the very bottom of the card — matching
 	// Nobria/Saldaria — while the form itself stays here. The in-form "Forgot
 	// password?" link still flips to reset mode locally.
-	let { mode = $bindable<Mode>('signin') } = $props();
+	let { mode = $bindable('signin') }: { mode?: Mode } = $props();
 	let email = $state('');
 	let password = $state('');
 	let busy = $state(false);

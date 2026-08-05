@@ -1,7 +1,12 @@
+App orientation (stack, commands, architecture, data/backups): `web/CLAUDE.md`.
+
 ## House rules
 
 - A user-visible feature is not done until its /guide entry is updated (and /roadmap if it changes the public plan).
-- Deploy ONLY via `cd web && npm run deploy` as a single command. The Bash shell
+- Primary deploy path: push to `main` — GitHub Actions verifies (svelte-check +
+  vitest) then deploys the Worker (`.github/workflows/deploy.yml`). Pushing to
+  main IS deploying; ask Fabio before pushing.
+- Manual fallback: deploy ONLY via `cd web && npm run deploy` as a single command. The Bash shell
   resets to the repo root on every call (no config there), so the `cd web` must
   ride along each time. Never run a bare `npx wrangler deploy` — from the root it
   finds no config and drops into wrangler's setup wizard, which auto-answers "yes"

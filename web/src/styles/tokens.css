@@ -183,3 +183,29 @@ body {
 	outline: var(--focus-ring);
 	outline-offset: 2px;
 }
+
+/* ── Theme-swap transition kill-switch ──────────────────────────────────
+   Chromium (through v148) fails to re-resolve a CSS-transitioned property
+   (color, border-color, background) when the custom property feeding it
+   changes value — so when `data-theme` flips on <html>, any element with
+   a `transition: color …` etc. keeps rendering the OLD theme's resolved
+   color for that property until something else forces recompute, while
+   non-transitioned properties on the same element update instantly. Several
+   scoped component styles transition these properties across a theme swap
+   (BottomBar.svelte's .bar-item, Sidebar.svelte's .nav-row/.util-row/
+   .rail-day/.rail-pill, TripBlock.svelte, TripDay.svelte, TripView.svelte,
+   ThemeToggle.svelte, and +page.svelte) and would otherwise freeze mid-swap.
+   This must live here, unscoped, rather than in any one component's <style>
+   block — Svelte scoping would neuter the descendant `*` selectors below,
+   and the suppression has to reach every one of those components at once.
+   swapColorScheme() in src/lib/theme/store.svelte.ts stamps `data-theme-swap`
+   immediately before writing `data-theme`, forcing a reflow so this rule is
+   already active when the token values change, then removes it right after
+   — so the properties snap to the new theme instead of trying (and failing)
+   to transition into it. */
+html[data-theme-swap],
+html[data-theme-swap] *,
+html[data-theme-swap] *::before,
+html[data-theme-swap] *::after {
+	transition: none !important;
+}

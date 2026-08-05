@@ -43,6 +43,69 @@ function applyThemeColor(mode: ThemeMode): void {
 /** Seed the active mode (called once from the root layout, both SSR + client). */
 export function initTheme(mode: ThemeMode): void {
 	active = mode;
+	registerSystemModeRepair();
+}
+
+/**
+ * Suppress all CSS transitions on <html> and its descendants for one paint
+ * cycle while `apply` runs, then restore them. Works around a Chromium bug
+ * (through v148) where a transitioned property (color, border-color,
+ * background) keeps rendering the OLD theme's resolved value when the
+ * custom property feeding it changes on a `data-theme` swap — several
+ * scoped component styles transition these (BottomBar, Sidebar, TripBlock,
+ * TripDay, TripView, ThemeToggle, +page.svelte) and would otherwise freeze
+ * mid-swap. See the `[data-theme-swap]` kill-switch in src/styles/tokens.css.
+ * `apply` may be a no-op — the system-mode repair below has nothing to set
+ * but still needs the freeze/reflow cycle to run so frozen properties
+ * re-resolve. SSR-safe: falls back to just running `apply` when there's no
+ * `document`.
+ */
+function swapColorScheme(apply: () => void): void {
+	if (typeof document === 'undefined') {
+		apply();
+		return;
+	}
+	const root = document.documentElement;
+	root.setAttribute('data-theme-swap', '');
+	void root.offsetWidth; // forced reflow: suppression active before the change
+	apply();
+	void root.offsetWidth; // forced reflow: properties re-resolve while suppressed
+	root.removeAttribute('data-theme-swap');
+}
+
+let mediaListenerRegistered = false;
+
+/**
+ * System-mode repair: on 'system' no `data-theme` attribute is ever written
+ * — CSS follows `prefers-color-scheme` directly via media query, and no JS
+ * runs when the OS flips light/dark, so the freeze bug above would go
+ * unrepaired. This listens for the OS-level scheme change and runs the same
+ * suppressed-transition cycle as a repair, with a no-op `apply` (nothing to
+ * set; the point is just to force the freeze/reflow cycle so already-frozen
+ * properties re-resolve). Runs twice per event: once synchronously (hidden/
+ * background tabs never get an animation frame, so an rAF-only repair could
+ * sit pending forever) and once on the next rAF (the 'change' event can fire
+ * before the new color-scheme has actually propagated to style resolution,
+ * so an early-only flush could re-commit the OLD values). The cycle is
+ * idempotent, so running it twice is safe. Note: this won't visibly fire
+ * under DevTools "emulate CSS media" — it needs a real OS-level scheme
+ * change to trigger matchMedia's 'change' event.
+ */
+function registerSystemModeRepair(): void {
+	if (mediaListenerRegistered) return;
+	if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+	mediaListenerRegistered = true;
+	const mql = window.matchMedia('(prefers-color-scheme: dark)');
+	mql.addEventListener('change', () => {
+		if (active !== 'system') return;
+		swapColorScheme(() => {});
+		if (typeof requestAnimationFrame === 'function') {
+			requestAnimationFrame(() => {
+				if (active !== 'system') return;
+				swapColorScheme(() => {});
+			});
+		}
+	});
 }
 
 /** The currently active theme mode (reactive when read in a component). */
@@ -60,9 +123,11 @@ export function setTheme(mode: ThemeMode): void {
 	} catch {
 		// Private-mode / storage-disabled: the cookie still carries SSR state.
 	}
-	const el = document.documentElement;
-	if (mode === 'light' || mode === 'dark') el.setAttribute('data-theme', mode);
-	else el.removeAttribute('data-theme');
+	swapColorScheme(() => {
+		const el = document.documentElement;
+		if (mode === 'light' || mode === 'dark') el.setAttribute('data-theme', mode);
+		else el.removeAttribute('data-theme');
+	});
 	applyThemeColor(mode);
 }
 

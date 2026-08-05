@@ -19,5 +19,8 @@
 
 - [ ] **Passkeys** on the shared login shell (family consistency program,
       open since round 2).
-- [ ] **Feedback → roadmap flow** (family P4): triage in-app feedback into
-      `roadmap.json` without hand-editing.
+- [x] **Feedback → roadmap flow** (family P4) — done 2026-08-06. Triage at
+      `/admin/roadmap`: accept a submission into a bilingual roadmap entry, or
+      dismiss it. `roadmap.json` is now the committed base snapshot; the D1
+      `roadmap_items` table (migration 0014) is the admin overlay merged over
+      it per request, so publishing needs no code edit and no deploy.

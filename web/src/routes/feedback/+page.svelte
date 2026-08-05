@@ -61,7 +61,10 @@
 	<div class="head-row">
 		<h1>{data.admin ? t('feedback.adminHeading') : t('feedback.heading')}</h1>
 		{#if data.admin}
-			<a class="approvals-link" href="/admin/approvals">{t('feedback.adminApprovalsLink')}</a>
+			<span class="admin-links">
+				<a class="approvals-link" href="/admin/roadmap">{t('feedback.adminRoadmapLink')}</a>
+				<a class="approvals-link" href="/admin/approvals">{t('feedback.adminApprovalsLink')}</a>
+			</span>
 		{/if}
 	</div>
 
@@ -126,6 +129,11 @@
 	h1 {
 		font-size: var(--type-h1);
 		margin: 0;
+	}
+	.admin-links {
+		display: flex;
+		gap: 0.9rem;
+		flex-wrap: wrap;
 	}
 	.approvals-link {
 		font-size: 0.82rem;

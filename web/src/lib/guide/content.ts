@@ -217,7 +217,8 @@ export const guide: GuideCatalog = {
 						id: 'send-feedback',
 						title: 'Send feedback',
 						body: [
-							'Use the feedback button — a speech-bubble icon in the sidebar (desktop) or the "More" sheet (mobile) — to send a bug report, an idea, or anything else. Your submissions are listed on the Feedback page (/feedback); deleting your account deletes them along with the rest of your data.'
+							'Use the feedback button — a speech-bubble icon in the sidebar (desktop) or the "More" sheet (mobile) — to send a bug report, an idea, or anything else. Your submissions are listed on the Feedback page (/feedback); deleting your account deletes them along with the rest of your data.',
+							'What happens next: every submission is read and triaged. If an idea is accepted it appears on the Roadmap (/roadmap), in both English and Portuguese, and your submission\'s status on the Feedback page changes to "planned" or "done". Nothing you write becomes public automatically — only the wording rewritten at triage goes onto the roadmap.'
 						]
 					}
 				]
@@ -483,7 +484,8 @@ export const guide: GuideCatalog = {
 						id: 'send-feedback',
 						title: 'Enviar feedback',
 						body: [
-							'Use o botão de feedback — um ícone de balão de fala na barra lateral (computador) ou na bandeja "Mais" (celular) — para enviar um relato de erro, uma ideia, ou qualquer outra coisa. Seus envios ficam listados na página de Feedback (/feedback); excluir sua conta também exclui esses envios junto com o restante dos seus dados.'
+							'Use o botão de feedback — um ícone de balão de fala na barra lateral (computador) ou na bandeja "Mais" (celular) — para enviar um relato de erro, uma ideia, ou qualquer outra coisa. Seus envios ficam listados na página de Feedback (/feedback); excluir sua conta também exclui esses envios junto com o restante dos seus dados.',
+							'O que acontece depois: cada envio é lido e recebe uma triagem. Se uma ideia for aceita, ela aparece no Roadmap (/roadmap) — em inglês e em português — e o status do seu envio muda para "planejado" ou "pronto" na página de Feedback. Nada do que você escreve vira público automaticamente: só entra no roadmap o texto reescrito na triagem.'
 						]
 					}
 				]

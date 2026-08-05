@@ -67,6 +67,28 @@ export async function listAllFeedback(db: D1Database): Promise<FeedbackAdminRow[
 	return rows.results;
 }
 
+/** Submissions in one status, joined with the submitter, newest first (admin).
+ *  Backs the /admin/roadmap triage queue, which only ever works the untriaged
+ *  ('new') end of the list. */
+export async function listFeedbackByStatus(
+	db: D1Database,
+	status: FeedbackStatus
+): Promise<FeedbackAdminRow[]> {
+	if (!isFeedbackStatus(status)) return [];
+	const rows = await db
+		.prepare(
+			`SELECT f.id, f.type, f.message, f.page, f.locale, f.status,
+			        f.created_at AS createdAt, f.updated_at AS updatedAt,
+			        f.user_id AS userId, u.name AS userName, u.email AS userEmail
+			 FROM feedback f JOIN users u ON u.id = f.user_id
+			 WHERE f.status = ?
+			 ORDER BY f.created_at DESC`
+		)
+		.bind(status)
+		.all<FeedbackAdminRow>();
+	return rows.results;
+}
+
 /** Set a submission's status (admin). Returns false for an unknown status. */
 export async function updateFeedbackStatus(
 	db: D1Database,

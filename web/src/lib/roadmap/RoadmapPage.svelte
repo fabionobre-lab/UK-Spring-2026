@@ -1,8 +1,14 @@
 <script lang="ts">
 	import { t, locale, formatDate } from '$lib/i18n/store.svelte';
 	import type { Messages } from '$lib/i18n';
-	import { roadmap, roadmapLocaleKey, STATUS_ORDER } from './roadmap';
-	import type { RoadmapStatus } from './types';
+	import { roadmapLocaleKey, STATUS_ORDER } from './roadmap';
+	import type { RoadmapSnapshot, RoadmapStatus } from './types';
+
+	// The snapshot comes from the route's server load: the committed
+	// roadmap.json merged with the admin-triaged D1 overlay. Taking it as a prop
+	// rather than importing the JSON here keeps roadmap.json out of the client
+	// bundle — the merge happens on the Worker.
+	let { snapshot }: { snapshot: RoadmapSnapshot } = $props();
 
 	const key = $derived(roadmapLocaleKey(locale()));
 
@@ -15,7 +21,7 @@
 	const grouped = $derived(
 		STATUS_ORDER.map((status) => ({
 			status,
-			items: roadmap.items.filter((it) => it.status === status)
+			items: snapshot.items.filter((it) => it.status === status)
 		})).filter((g) => g.items.length > 0)
 	);
 </script>
@@ -27,7 +33,7 @@
 <main>
 	<a class="back" href="/">{t('legal.back')}</a>
 	<h1>{t('roadmap.heading')}</h1>
-	<p class="updated">{t('legal.lastUpdated')}: {formatDate(roadmap.updated)}</p>
+	<p class="updated">{t('legal.lastUpdated')}: {formatDate(snapshot.updated)}</p>
 	<p class="intro">{t('roadmap.intro')}</p>
 
 	{#each grouped as group (group.status)}

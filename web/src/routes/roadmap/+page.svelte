@@ -6,6 +6,6 @@
 	let { data } = $props();
 </script>
 
-<RoadmapPage />
+<RoadmapPage snapshot={data.roadmap} />
 
 <BottomBar user={data.user} items={[{ id: 'trips', label: t('nav.trips'), icon: 'trips', href: '/' }]} />

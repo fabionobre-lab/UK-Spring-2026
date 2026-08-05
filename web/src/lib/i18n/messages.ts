@@ -534,7 +534,37 @@ export interface Messages {
 	'admin.approvals.statusRejected': string;
 	'admin.approvals.requestedLabel': string; // "Requested {date}"
 	'admin.approvals.decidedLabel': string; // "Decided {date}"
+	// ── Admin: feedback → roadmap triage (/admin/roadmap) ──
+	'admin.roadmap.pageTitle': string;
+	'admin.roadmap.heading': string;
+	'admin.roadmap.intro': string;
+	'admin.roadmap.queueHeading': string;
+	'admin.roadmap.queueEmpty': string;
+	'admin.roadmap.acceptToggle': string;
+	'admin.roadmap.publish': string;
+	'admin.roadmap.dismiss': string;
+	'admin.roadmap.titleEn': string;
+	'admin.roadmap.titlePt': string;
+	'admin.roadmap.noteEn': string;
+	'admin.roadmap.notePt': string;
+	'admin.roadmap.status': string;
+	'admin.roadmap.bilingualHint': string;
+	'admin.roadmap.entriesHeading': string;
+	'admin.roadmap.save': string;
+	'admin.roadmap.retire': string;
+	'admin.roadmap.restore': string;
+	'admin.roadmap.revert': string;
+	'admin.roadmap.retired': string;
+	'admin.roadmap.sourceBase': string;
+	'admin.roadmap.sourceOverlay': string;
+	'admin.roadmap.error.bad_status': string;
+	'admin.roadmap.error.missing_title': string;
+	'admin.roadmap.error.title_too_long': string;
+	'admin.roadmap.error.half_note': string;
+	'admin.roadmap.error.note_too_long': string;
+	'admin.roadmap.error.not_found': string;
 	'feedback.adminApprovalsLink': string; // nav affordance on the feedback admin view
+	'feedback.adminRoadmapLink': string;
 
 	// ── Header/nav entry point to the account page (Phase 2) ──
 	'header.account': string; // link label, desktop header + mobile More sheet
@@ -1090,7 +1120,38 @@ const enGB: Messages = {
 	'admin.approvals.statusRejected': 'Rejected',
 	'admin.approvals.requestedLabel': 'Requested {date}',
 	'admin.approvals.decidedLabel': 'Decided {date}',
+	'admin.roadmap.pageTitle': 'Roadmap triage — Zarparia',
+	'admin.roadmap.heading': 'Roadmap triage',
+	'admin.roadmap.intro':
+		'Accept a suggestion to publish it on the public roadmap, or dismiss it. Published entries appear at /roadmap straight away.',
+	'admin.roadmap.queueHeading': 'Untriaged feedback',
+	'admin.roadmap.queueEmpty': 'Nothing waiting — the queue is clear.',
+	'admin.roadmap.acceptToggle': 'Accept into roadmap',
+	'admin.roadmap.publish': 'Publish',
+	'admin.roadmap.dismiss': 'Dismiss',
+	'admin.roadmap.titleEn': 'Title (English)',
+	'admin.roadmap.titlePt': 'Title (Portuguese)',
+	'admin.roadmap.noteEn': 'Note (English, optional)',
+	'admin.roadmap.notePt': 'Note (Portuguese, optional)',
+	'admin.roadmap.status': 'Status',
+	'admin.roadmap.bilingualHint':
+		'Both languages are required — a one-sided entry is rejected. A note is optional, but if you write one, write both.',
+	'admin.roadmap.entriesHeading': 'Roadmap entries',
+	'admin.roadmap.save': 'Save',
+	'admin.roadmap.retire': 'Retire',
+	'admin.roadmap.restore': 'Restore',
+	'admin.roadmap.revert': 'Revert to snapshot',
+	'admin.roadmap.retired': 'Retired',
+	'admin.roadmap.sourceBase': 'Snapshot',
+	'admin.roadmap.sourceOverlay': 'Triaged',
+	'admin.roadmap.error.bad_status': 'Pick a valid status.',
+	'admin.roadmap.error.missing_title': 'Both the English and the Portuguese title are required.',
+	'admin.roadmap.error.title_too_long': 'That title is too long for the roadmap list.',
+	'admin.roadmap.error.half_note': 'A note needs both languages, or neither.',
+	'admin.roadmap.error.note_too_long': 'That note is too long.',
+	'admin.roadmap.error.not_found': 'That item no longer exists — reload the page.',
 	'feedback.adminApprovalsLink': 'Manage approvals',
+	'feedback.adminRoadmapLink': 'Roadmap triage →',
 
 	'header.account': 'Account',
 
@@ -1646,7 +1707,38 @@ const ptBR: Messages = {
 	'admin.approvals.statusRejected': 'Rejeitado',
 	'admin.approvals.requestedLabel': 'Solicitado {date}',
 	'admin.approvals.decidedLabel': 'Decidido {date}',
+	'admin.roadmap.pageTitle': 'Triagem do roadmap — Zarparia',
+	'admin.roadmap.heading': 'Triagem do roadmap',
+	'admin.roadmap.intro':
+		'Aceite uma sugestão para publicá-la no roadmap público, ou descarte-a. As entradas publicadas aparecem em /roadmap imediatamente.',
+	'admin.roadmap.queueHeading': 'Feedback sem triagem',
+	'admin.roadmap.queueEmpty': 'Nada aguardando — a fila está vazia.',
+	'admin.roadmap.acceptToggle': 'Aceitar no roadmap',
+	'admin.roadmap.publish': 'Publicar',
+	'admin.roadmap.dismiss': 'Descartar',
+	'admin.roadmap.titleEn': 'Título (inglês)',
+	'admin.roadmap.titlePt': 'Título (português)',
+	'admin.roadmap.noteEn': 'Nota (inglês, opcional)',
+	'admin.roadmap.notePt': 'Nota (português, opcional)',
+	'admin.roadmap.status': 'Status',
+	'admin.roadmap.bilingualHint':
+		'Os dois idiomas são obrigatórios — uma entrada pela metade é rejeitada. A nota é opcional, mas se escrever uma, escreva nos dois idiomas.',
+	'admin.roadmap.entriesHeading': 'Entradas do roadmap',
+	'admin.roadmap.save': 'Salvar',
+	'admin.roadmap.retire': 'Aposentar',
+	'admin.roadmap.restore': 'Restaurar',
+	'admin.roadmap.revert': 'Voltar ao snapshot',
+	'admin.roadmap.retired': 'Aposentada',
+	'admin.roadmap.sourceBase': 'Snapshot',
+	'admin.roadmap.sourceOverlay': 'Triada',
+	'admin.roadmap.error.bad_status': 'Escolha um status válido.',
+	'admin.roadmap.error.missing_title': 'O título em inglês e em português são obrigatórios.',
+	'admin.roadmap.error.title_too_long': 'Esse título é longo demais para a lista do roadmap.',
+	'admin.roadmap.error.half_note': 'Uma nota precisa dos dois idiomas, ou de nenhum.',
+	'admin.roadmap.error.note_too_long': 'Essa nota é longa demais.',
+	'admin.roadmap.error.not_found': 'Esse item não existe mais — recarregue a página.',
 	'feedback.adminApprovalsLink': 'Gerenciar aprovações',
+	'feedback.adminRoadmapLink': 'Triagem do roadmap →',
 
 	'header.account': 'Conta',
 

@@ -38,6 +38,11 @@ wizard-scaffold hazard).
 - `src/routes/guide/`, `src/routes/roadmap/` — content in `src/lib/guide/`.
   House rule: a user-visible feature isn't done until its /guide entry is
   updated.
+- The public roadmap is **two layers**: `src/lib/roadmap/roadmap.json` is the
+  committed base snapshot, and D1 `roadmap_items` (migration 0014) is the
+  admin-triaged overlay merged over it per request (`src/lib/roadmap/merge.ts`).
+  Triage happens in-app at `/admin/roadmap` — publishing a roadmap entry needs
+  no code edit and no deploy, so don't hand-edit roadmap.json to add one.
 
 ## Data & backups
 

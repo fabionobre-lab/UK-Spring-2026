@@ -342,22 +342,30 @@
 		border: none;
 		border-radius: var(--radius-md);
 		background: none;
-		color: var(--text);
+		color: var(--text-muted);
 		font: inherit;
 		font-size: 0.9rem;
 		text-align: left;
 		text-decoration: none;
 		cursor: pointer;
+		/* Family standard (2026-08-10 ruling): active destination = accent left
+		   bar + brightened text, no fill. Bar is reserved here so it can fade. */
+		box-shadow: inset 2px 0 0 0 transparent;
+		transition:
+			color 120ms ease,
+			box-shadow 120ms ease,
+			background 120ms ease;
 	}
 	.nav-label {
 		min-width: 0;
 	}
 	.nav-row:hover {
 		background: color-mix(in srgb, var(--accent-strong) 8%, transparent);
+		color: var(--text);
 	}
 	.nav-row.active {
-		background: color-mix(in srgb, var(--accent-strong) 12%, transparent);
-		color: var(--accent-strong);
+		box-shadow: inset 2px 0 0 0 var(--accent-strong);
+		color: var(--text);
 		font-weight: 600;
 	}
 	.divider {

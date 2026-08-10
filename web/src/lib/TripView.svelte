@@ -10,6 +10,7 @@
 		type SegWeather,
 		type ChecklistItem,
 		type PhotoSpot,
+		type Localized,
 		loc,
 		localeFor,
 		dayLabel,
@@ -689,8 +690,8 @@
 	}
 
 	// ── Wikipedia thumbnails for the current day's photo spots ──
-	function spotKey(sp: { name: string; wiki?: string; fallbackImg?: string }): string | null {
-		return sp.wiki ? sp.wiki : sp.fallbackImg ? 'img:' + sp.name : null;
+	function spotKey(sp: { name: Localized | string; wiki?: string; fallbackImg?: string }): string | null {
+		return sp.wiki ? sp.wiki : sp.fallbackImg ? 'img:' + L(sp.name) : null;
 	}
 	$effect(() => {
 		const day = current?.day;
@@ -698,7 +699,7 @@
 		for (const b of day.blocks) {
 			for (const sp of b.photoSpots ?? []) {
 				if (!sp.wiki && sp.fallbackImg) {
-					const k = 'img:' + sp.name;
+					const k = 'img:' + L(sp.name);
 					if (wikiImgs[k] === undefined) wikiImgs = { ...wikiImgs, [k]: sp.fallbackImg };
 					continue;
 				}

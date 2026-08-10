@@ -327,11 +327,11 @@
 					{@const img = spotImg(sp)}
 					<a href={safeUrl(sp.mapsUrl)} target="_blank" rel="noopener noreferrer" class="ps-card">
 						{#if img}
-							<img src={img} class="ps-thumb" alt={sp.name} />
+							<img src={img} class="ps-thumb" alt={L(sp.name)} />
 						{:else}
 							<div class="ps-thumb ps-placeholder" aria-hidden="true"></div>
 						{/if}
-						<span class="ps-label">{sp.name}</span>
+						<span class="ps-label">{L(sp.name)}</span>
 					</a>
 				{/each}
 			</div>

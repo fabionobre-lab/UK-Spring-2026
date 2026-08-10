@@ -233,7 +233,7 @@
 										{#if b.photoSpots?.length}
 											<div class="b-spots">
 												<span class="b-spots-lbl">{ui.photos}:</span>
-												{b.photoSpots.map((sp) => sp.name).join(' · ')}
+												{b.photoSpots.map((sp) => L(sp.name)).join(' · ')}
 											</div>
 										{/if}
 										{#if b.links?.length}

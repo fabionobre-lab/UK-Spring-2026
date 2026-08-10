@@ -274,7 +274,10 @@
             "required": ["name", "mapsUrl"],
             "additionalProperties": false,
             "properties": {
-              "name": { "type": "string" },
+              "name": {
+                "description": "Localized like other trip-content fields; a plain string is also accepted for back-compat with trips stored before this field was localized.",
+                "oneOf": [{ "$ref": "#/$defs/localized" }, { "type": "string" }]
+              },
               "mapsUrl": { "type": "string", "format": "uri", "pattern": "^https?://" },
               "wiki": { "type": "string", "description": "Wikipedia page title for thumbnail lookup" },
               "fallbackImg": { "type": "string", "format": "uri", "pattern": "^https?://" }

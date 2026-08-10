@@ -12,7 +12,7 @@
 	// catalog TripView uses internally: this is an authoring form rendered in the
 	// top layer, not trip content, and every label it needs already exists from
 	// the form editor.
-	import type { Block, Trip, CostCategory } from '$lib/trip-engine';
+	import type { Block, Trip, CostCategory, Localized } from '$lib/trip-engine';
 	import PlaceSearch from '$lib/editor/PlaceSearch.svelte';
 	import { t } from '$lib/i18n/store.svelte';
 
@@ -174,6 +174,25 @@
 		block.photoSpots?.splice(i, 1);
 		if (block.photoSpots && block.photoSpots.length === 0) block.photoSpots = undefined;
 		onedit?.(true);
+	}
+	// `name` is Localized like every other trip-content field, but a plain
+	// string is still accepted for back-compat with trips stored before this
+	// field was localized — read whichever shape is on the model, and only
+	// convert to an object on the first edit (keeping the legacy string under
+	// the trip's defaultLanguage key so the other language isn't silently lost).
+	function photoSpotName(name: Localized | string): string {
+		return typeof name === 'string' ? name : (name?.[lang] ?? '');
+	}
+	function setPhotoSpotName(i: number, value: string) {
+		const ps = block.photoSpots?.[i];
+		if (!ps) return;
+		if (typeof ps.name === 'string') {
+			const legacy = ps.name;
+			ps.name = legacy ? { [trip.defaultLanguage]: legacy, [lang]: value } : { [lang]: value };
+		} else {
+			ps.name = { ...ps.name, [lang]: value };
+		}
+		onedit?.();
 	}
 
 	// ── Waypoints ──
@@ -404,7 +423,13 @@
 				</div>
 				{#each block.photoSpots ?? [] as ps, i (i)}
 					<div class="spotrow">
-						<input type="text" bind:value={ps.name} placeholder={t('block.captionPlaceholder')} aria-label={t('block.photoCaptionAria')} />
+						<input
+							type="text"
+							value={photoSpotName(ps.name)}
+							oninput={(e) => setPhotoSpotName(i, e.currentTarget.value)}
+							placeholder={t('block.captionPlaceholder')}
+							aria-label={t('block.photoCaptionAria')}
+						/>
 						<input type="text" bind:value={ps.mapsUrl} placeholder={t('block.photoMapsPlaceholder')} aria-label={t('block.photoMapsAria')} />
 						<input type="text" bind:value={ps.wiki} placeholder={t('block.wikiPlaceholder')} aria-label={t('block.wikiAria')} />
 						<input type="text" bind:value={ps.fallbackImg} placeholder={t('block.fallbackImgPlaceholder')} aria-label={t('block.fallbackImgAria')} />

@@ -4,6 +4,7 @@
 // additionalProperties:false / required should reject.
 import { describe, expect, it } from 'vitest';
 import { validateTripDoc } from '../src/lib/validateTrip';
+import { loc, type Trip } from '../src/lib/trip-engine';
 import demoTrip from '../src/lib/seed/demo-trip.json';
 
 function baseTrip(blockOverrides: Record<string, unknown> = {}) {
@@ -103,5 +104,67 @@ describe('validateTripDoc — checklist block', () => {
 		const result = validateTripDoc(demoTrip);
 		expect(result.errors).toEqual([]);
 		expect(result.valid).toBe(true);
+	});
+});
+
+// PhotoSpot.name switched from a plain string to Localized|string so photo
+// captions translate with the rest of the trip content; the schema and the
+// loc() helper both have to keep accepting the plain-string shape so trips
+// stored before this change still validate and render.
+describe('validateTripDoc — photoSpot name (Localized | string back-compat)', () => {
+	it('accepts a plain-string photoSpot name (legacy shape)', () => {
+		const doc = baseTrip({
+			photoSpots: [{ name: 'Castle view', mapsUrl: 'https://maps.google.com/?q=Castle' }]
+		});
+		const result = validateTripDoc(doc);
+		expect(result.errors).toEqual([]);
+		expect(result.valid).toBe(true);
+	});
+
+	it('accepts a localized-object photoSpot name', () => {
+		const doc = baseTrip({
+			photoSpots: [
+				{
+					name: { en: 'Castle view', pt: 'Vista do castelo' },
+					mapsUrl: 'https://maps.google.com/?q=Castle'
+				}
+			]
+		});
+		const result = validateTripDoc(doc);
+		expect(result.errors).toEqual([]);
+		expect(result.valid).toBe(true);
+	});
+
+	it('rejects a photoSpot name that is neither a string nor a localized object', () => {
+		const doc = baseTrip({ photoSpots: [{ name: 42, mapsUrl: 'https://maps.google.com/?q=Castle' }] });
+		expect(validateTripDoc(doc).valid).toBe(false);
+	});
+
+	it('rejects an empty-object photoSpot name (localized requires at least one language)', () => {
+		const doc = baseTrip({ photoSpots: [{ name: {}, mapsUrl: 'https://maps.google.com/?q=Castle' }] });
+		expect(validateTripDoc(doc).valid).toBe(false);
+	});
+});
+
+describe('loc() — plain-string passthrough', () => {
+	const trip: Trip = {
+		id: 't',
+		title: { en: 'T' },
+		languages: ['en', 'pt'],
+		defaultLanguage: 'en',
+		segments: []
+	};
+
+	it('returns a plain string unchanged regardless of the requested language', () => {
+		expect(loc(trip, 'Castle Esplanade approach', 'en')).toBe('Castle Esplanade approach');
+		expect(loc(trip, 'Castle Esplanade approach', 'pt')).toBe('Castle Esplanade approach');
+	});
+
+	it('still resolves a Localized object as before', () => {
+		expect(loc(trip, { en: 'Castle', pt: 'Castelo' }, 'pt')).toBe('Castelo');
+	});
+
+	it('returns "" for undefined', () => {
+		expect(loc(trip, undefined, 'en')).toBe('');
 	});
 });

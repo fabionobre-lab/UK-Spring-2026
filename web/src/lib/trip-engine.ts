@@ -7,7 +7,11 @@
 export type Localized = Record<string, string>;
 
 export interface PhotoSpot {
-	name: string;
+	/** Localized like every other trip-content field; a plain string is also
+	 *  accepted for back-compat with trips stored before this field switched
+	 *  from a bare string (older seeds, prior exports) — `loc()` passes a
+	 *  plain string straight through. */
+	name: Localized | string;
 	mapsUrl: string;
 	wiki?: string;
 	fallbackImg?: string;
@@ -149,8 +153,9 @@ export function linkLabel(link: BookingLink): string {
 	return host;
 }
 
-export function loc(trip: Trip, obj: Localized | undefined, lang: string): string {
+export function loc(trip: Trip, obj: Localized | string | undefined, lang: string): string {
 	if (!obj) return '';
+	if (typeof obj === 'string') return obj;
 	return obj[lang] !== undefined ? obj[lang] : (obj[trip.defaultLanguage] ?? '');
 }
 

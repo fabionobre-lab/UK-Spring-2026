@@ -167,7 +167,7 @@ export function pruneEmpty(value: unknown, keepEmptyStr = false): unknown {
 		if (Array.isArray(out.photoSpots)) {
 			out.photoSpots = (out.photoSpots as Record<string, unknown>[]).filter(
 				(p) =>
-					typeof p.name === 'string' &&
+					(typeof p.name === 'string' ? p.name !== '' : !!p.name && typeof p.name === 'object') &&
 					typeof p.mapsUrl === 'string' &&
 					/^https?:\/\//i.test(p.mapsUrl)
 			);

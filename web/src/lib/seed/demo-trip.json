@@ -261,12 +261,18 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "Castle Esplanade approach",
+                      "name": {
+                        "en": "Castle Esplanade approach",
+                        "pt": "Chegada pela Esplanada do Castelo"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Edinburgh+Castle+Esplanade",
                       "wiki": "Edinburgh Castle"
                     },
                     {
-                      "name": "View from Half Moon Battery",
+                      "name": {
+                        "en": "View from Half Moon Battery",
+                        "pt": "Vista da Half Moon Battery"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Half+Moon+Battery+Edinburgh+Castle",
                       "wiki": "Edinburgh Castle"
                     }
@@ -315,7 +321,10 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "Victoria Street curved view",
+                      "name": {
+                        "en": "Victoria Street curved view",
+                        "pt": "Curva da Victoria Street"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Victoria+Street+Edinburgh",
                       "wiki": "Victoria Street, Edinburgh"
                     }
@@ -347,7 +356,10 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "Arthur's Seat summit panorama",
+                      "name": {
+                        "en": "Arthur's Seat summit panorama",
+                        "pt": "Panorama do topo de Arthur's Seat"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Arthurs+Seat+Edinburgh",
                       "wiki": "Arthur's Seat"
                     }
@@ -468,7 +480,10 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "Castle from the gardens",
+                      "name": {
+                        "en": "Castle from the gardens",
+                        "pt": "Castelo visto dos jardins"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Princes+Street+Gardens+Edinburgh",
                       "wiki": "Princes Street Gardens"
                     }
@@ -496,7 +511,10 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "Panorama west to the Castle",
+                      "name": {
+                        "en": "Panorama west to the Castle",
+                        "pt": "Panorama a oeste, em direção ao Castelo"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Calton+Hill+Edinburgh",
                       "wiki": "Calton Hill"
                     }
@@ -581,7 +599,10 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "Dean Bridge from the riverbank",
+                      "name": {
+                        "en": "Dean Bridge from the riverbank",
+                        "pt": "Dean Bridge vista da margem do rio"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Dean+Bridge+Edinburgh",
                       "wiki": "Dean Bridge"
                     }
@@ -716,7 +737,10 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "Three Sisters from the viewpoint layby",
+                      "name": {
+                        "en": "Three Sisters from the viewpoint layby",
+                        "pt": "Three Sisters vista do mirante à beira da estrada"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Glencoe+Viewpoint+Scotland",
                       "wiki": "Glen Coe"
                     }
@@ -765,7 +789,10 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "Viaduct curve from the monument path",
+                      "name": {
+                        "en": "Viaduct curve from the monument path",
+                        "pt": "Curva do viaduto vista da trilha do monumento"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Glenfinnan+Monument",
                       "wiki": "Glenfinnan Viaduct",
                       "fallbackImg": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Glenfinnan_Viaduct_from_the_air.jpg/330px-Glenfinnan_Viaduct_from_the_air.jpg"
@@ -847,7 +874,10 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "Castle from the footbridge",
+                      "name": {
+                        "en": "Castle from the footbridge",
+                        "pt": "Castelo visto da passarela"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Eilean+Donan+Castle",
                       "wiki": "Eilean Donan"
                     }
@@ -892,7 +922,10 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "Pinnacle against the sea loch",
+                      "name": {
+                        "en": "Pinnacle against the sea loch",
+                        "pt": "Pináculo contra o loch marinho"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Old+Man+of+Storr",
                       "wiki": "Old Man of Storr"
                     }
@@ -976,7 +1009,10 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "Pools with the Cuillin behind",
+                      "name": {
+                        "en": "Pools with the Cuillin behind",
+                        "pt": "Piscinas com as Cuillin ao fundo"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Fairy+Pools+Skye",
                       "wiki": "Fairy Pools"
                     }
@@ -1117,7 +1153,10 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "Three Sisters from the viewpoint layby",
+                      "name": {
+                        "en": "Three Sisters from the viewpoint layby",
+                        "pt": "Three Sisters vista do mirante à beira da estrada"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Glencoe+Viewpoint+Scotland",
                       "wiki": "Glen Coe"
                     }
@@ -1166,7 +1205,10 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "Viaduct curve from the monument path",
+                      "name": {
+                        "en": "Viaduct curve from the monument path",
+                        "pt": "Curva do viaduto vista da trilha do monumento"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Glenfinnan+Monument",
                       "wiki": "Glenfinnan Viaduct",
                       "fallbackImg": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Glenfinnan_Viaduct_from_the_air.jpg/330px-Glenfinnan_Viaduct_from_the_air.jpg"
@@ -1259,7 +1301,10 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "White-washed distillery buildings",
+                      "name": {
+                        "en": "White-washed distillery buildings",
+                        "pt": "Prédios brancos da destilaria"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Dalwhinnie+Distillery",
                       "wiki": "Dalwhinnie distillery"
                     }
@@ -1318,7 +1363,10 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "Castle ruins over the loch",
+                      "name": {
+                        "en": "Castle ruins over the loch",
+                        "pt": "Ruínas do castelo sobre o loch"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Urquhart+Castle",
                       "wiki": "Urquhart Castle"
                     }
@@ -1419,7 +1467,10 @@
                   },
                   "photoSpots": [
                     {
-                      "name": "Plateau view from the visitor centre",
+                      "name": {
+                        "en": "Plateau view from the visitor centre",
+                        "pt": "Vista do planalto a partir do centro de visitantes"
+                      },
                       "mapsUrl": "https://maps.google.com/?q=Cairngorms+National+Park",
                       "wiki": "Cairngorms National Park"
                     }

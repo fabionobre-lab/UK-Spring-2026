@@ -237,8 +237,10 @@
 		   rules, which otherwise reserve the gesture and block page scroll. */
 		touch-action: pan-y !important;
 	}
-	/* Desktop: the map lives in the sticky right column and can be much taller. */
-	@media (min-width: 960px) {
+	/* Two-pane tiers (≥700px, see TripDay): the map lives in the sticky right
+	   column and can be much taller. The ResizeObserver above re-fits Leaflet
+	   whenever this height flips, so crossing the breakpoint is safe. */
+	@media (min-width: 700px) {
 		.map-panel {
 			margin: 0;
 			height: clamp(360px, 55vh, 520px);

@@ -1,4 +1,28 @@
+# Zarparia — CLAUDE.md
+
+> **The repo folder is `C:\AI\TravelApp\UK-Spring-2026`.** Product names in this
+> family do not match folder names. See `C:\AI\AriaNobre\FAMILY-STANDARDS.md` §00.
+
 App orientation (stack, commands, architecture, data/backups): `web/CLAUDE.md`.
+
+## Who this is for — read before any design decision
+
+Zarparia is a **multi-user public product, not a personal tool**. Open
+self-serve signup, gated by owner approval while pre-launch. **Users are
+worldwide** — primary markets UK, Brazil and USA, but anyone anywhere, in any
+timezone, on any device. It is one product in the **Aria Nobre product family**
+(with Nobria, Saldaria, Ferosia), built by one company: "family" here always
+means that product line, never anyone's household. Fabio is owner and operator,
+and the house rules below are about how he wants the work done.
+
+So: never design for one user, one region or one device. Data identical for
+every user belongs in one global store fetched once, not per user, per device
+or per edge location. A design that works for the owner today and degrades as
+real users arrive is a bug, not a tradeoff.
+
+Canonical statement, and the place to correct it: `FAMILY-STANDARDS.md` §00 in
+`C:\AI\AriaNobre`. It is repeated here because a `CLAUDE.md` only loads for the
+repo being worked in, so cross-repo corrections do not propagate on their own.
 
 ## House rules
 

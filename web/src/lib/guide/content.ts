@@ -110,7 +110,8 @@ export const guide: GuideCatalog = {
 						id: 'import',
 						title: 'Import',
 						body: [
-							"Paste a rough itinerary — an email thread, a list of notes, even a loose sentence describing the trip — and Zarparia turns it into a draft trip you can refine afterwards in the editor. It's a starting point, not a finished result; expect to tidy it up."
+							"Paste a rough itinerary — an email thread, a list of notes, even a loose sentence describing the trip — and Zarparia turns it into a draft trip you can refine afterwards in the editor. It's a starting point, not a finished result; expect to tidy it up.",
+							"Pasting an itinerary is currently switched off, so you won't see it in the menu. The connector below does the same job from your own Claude app — and builds a richer trip — so use that in the meantime."
 						]
 					},
 					{
@@ -379,7 +380,8 @@ export const guide: GuideCatalog = {
 						id: 'import',
 						title: 'Importar',
 						body: [
-							'Cole um roteiro solto — uma troca de e-mails, uma lista de notas, até uma frase descrevendo a viagem — e o Zarparia transforma isso em uma viagem em rascunho que você refina depois no editor. É um ponto de partida, não um resultado pronto; espere ter que ajustar.'
+							'Cole um roteiro solto — uma troca de e-mails, uma lista de notas, até uma frase descrevendo a viagem — e o Zarparia transforma isso em uma viagem em rascunho que você refina depois no editor. É um ponto de partida, não um resultado pronto; espere ter que ajustar.',
+							'Colar um roteiro está desativado no momento, então você não verá essa opção no menu. O conector logo abaixo faz o mesmo trabalho a partir do seu próprio aplicativo Claude — e monta uma viagem mais completa — então use ele enquanto isso.'
 						]
 					},
 					{

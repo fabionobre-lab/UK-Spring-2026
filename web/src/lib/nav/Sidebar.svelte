@@ -35,10 +35,26 @@
 	const approved = $derived(!!user && user.status === 'approved');
 	const routeId = $derived(page.route.id ?? '');
 
+	// Paste-import needs a server-side Anthropic key; without it the route only
+	// ever answers "Import isn't set up on this server yet", so the entry point
+	// hides rather than dead-ends. Flag comes from the root layout load, same
+	// display-only pattern as `admin` above.
+	const importEnabled = $derived(!!page.data.importEnabled);
+
 	const navItems = $derived<{ id: string; label: string; icon: IconName; href: string; active: boolean }[]>([
 		{ id: 'trips', label: t('nav.trips'), icon: 'trips', href: '/', active: routeId === '/' },
 		{ id: 'new', label: t('nav.newTrip'), icon: 'newTrip', href: '/trips/new', active: routeId === '/trips/new' },
-		{ id: 'import', label: t('nav.import'), icon: 'import', href: '/trips/import', active: routeId === '/trips/import' }
+		...(importEnabled
+			? [
+					{
+						id: 'import',
+						label: t('nav.import'),
+						icon: 'import' as IconName,
+						href: '/trips/import',
+						active: routeId === '/trips/import'
+					}
+				]
+			: [])
 	]);
 
 	const trip = $derived(tripNav());

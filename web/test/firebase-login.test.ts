@@ -116,7 +116,16 @@ describe('POST /auth/login/firebase — post-verification gates', () => {
 describe('POST /auth/login/firebase — rate limited end to end', () => {
 	it('allows 20 requests per minute per IP, then 429s on the 21st', async () => {
 		expect.assertions(21);
-		const ip = '198.51.100.' + Math.floor(Math.random() * 254 + 1);
+		// Fixed address in TEST-NET-1, isolating this test's bucket — same reason
+		// test/ratelimit.test.ts moves its end-to-end case onto its own subnet.
+		// Every other case in this file (and in test/health.test.ts) draws at
+		// random from 198.51.100.0/24, and this is the one test that needs a
+		// VIRGIN bucket: it spends the window's whole 20-request budget before
+		// asserting the 21st is refused. A single collision with an earlier draw
+		// makes the 429 arrive early and fails the run — ~17% of the time across
+		// the ten draws sharing that /24 (birthday paradox), which is exactly the
+		// flake seen on CI.
+		const ip = '192.0.2.20';
 		const platform = platformWith({ FIREBASE_PROJECT_ID: 'zarparia-test' });
 
 		for (let i = 0; i < 20; i++) {

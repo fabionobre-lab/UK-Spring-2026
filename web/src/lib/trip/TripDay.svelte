@@ -553,9 +553,9 @@
 		font-style: italic;
 		letter-spacing: 0.05em;
 	}
-	/* Mobile: the Day-Route stepper is hidden (its Maps link survives as the
-	   compact .maps-link-btn under the map). It returns on desktop (see the
-	   ≥960px block), where it sits in the sticky right column beneath the map. */
+	/* Single-column (<700px): the Day-Route stepper is hidden (its Maps link
+	   survives as the compact .maps-link-btn under the map). It returns in the
+	   two-pane block below, where it sits in the sticky right column under the map. */
 	.route-card {
 		display: none;
 		margin: 10px 13px 4px;
@@ -566,9 +566,10 @@
 		text-decoration: none;
 		color: var(--text);
 	}
-	/* Compact full-width quiet button that replaces the stepper on mobile — the
-	   route card's one unique affordance (open the whole day's route in Maps),
-	   kept at ≥44px tall. Hidden on desktop where the full card is back. */
+	/* Compact full-width quiet button that replaces the stepper in the
+	   single-column layout — the route card's one unique affordance (open the
+	   whole day's route in Maps), kept at ≥44px tall. Hidden at ≥700px, where the
+	   full card is back. */
 	.maps-link-btn {
 		display: flex;
 		align-items: center;
@@ -709,22 +710,28 @@
 		color: var(--text-muted);
 	}
 
-	/* ── Desktop: two-pane day body ──
+	/* ── Two-pane day body (≥700px) ──
 	   The day body becomes a two-column grid: a scrolling left column (header,
 	   timeline, photos) and a sticky right column holding the map then the
 	   Day-Route card. The keyed day-switch fly transition applies to the whole
 	   .day-content grid. The shell/hero/daynav half of this breakpoint stays in
-	   TripView, which owns those elements. */
-	@media (min-width: 960px) {
+	   TripView, which owns those elements.
+
+	   This starts at 700px, not 960px: TripView's shell now grows past its old
+	   430px cap from 700px up, and a single 900px-wide column would just be
+	   over-long lines of text. The 960px block below re-tunes the same grid for
+	   desktop (wider gutters, wider map floor, no sticky day nav to clear). */
+	@media (min-width: 700px) {
 		.day-content {
 			display: grid;
 			/* Left track (timeline) capped at a readable line length; the map track
-			   is `1fr`, so all extra viewport width flows to the map. Map keeps a
-			   320px floor on the tight 960–1199 tier (240px sidebar present) and a
-			   420px floor at ≥1200 (below). */
-			grid-template-columns: minmax(0, 760px) minmax(320px, 1fr);
-			gap: 0 24px;
-			padding: 0 24px 8px;
+			   is `1fr`, so all extra viewport width flows to the map. The map floor
+			   steps up with the tier: 260px here (no sidebar, but a narrow shell),
+			   320px on the tight 960–1199 tier (240px sidebar present) and 420px at
+			   ≥1200 (both below). */
+			grid-template-columns: minmax(0, 760px) minmax(260px, 1fr);
+			gap: 0 20px;
+			padding: 0 16px 8px;
 			align-items: start;
 		}
 		/* Left-column items are pinned to explicit rows 1-4 and the aside spans
@@ -759,9 +766,10 @@
 			grid-row: 1 / 5;
 			align-self: start;
 			position: sticky;
-			/* No sticky day nav to clear at ≥960px anymore; this offset keeps the map
-			   clear of the demo page's sticky "sample trip" banner. */
-			top: 72px;
+			/* On this tier TripView's horizontal day nav is still present and sticky
+			   at top: 0 — ~44px, or ~64px once its stuck context line appears. Clear
+			   both so the map never slides under it. */
+			top: 76px;
 		}
 		.route-card {
 			display: block;
@@ -769,6 +777,23 @@
 		}
 		.maps-link-btn {
 			display: none;
+		}
+	}
+
+	/* ── Desktop (≥960px) ──
+	   Same two-pane grid, re-tuned: full-bleed shell, 24px gutters matching the
+	   hero, and a wider map floor now that the 240px sidebar has taken over
+	   day navigation. */
+	@media (min-width: 960px) {
+		.day-content {
+			grid-template-columns: minmax(0, 760px) minmax(320px, 1fr);
+			gap: 0 24px;
+			padding: 0 24px 8px;
+		}
+		.day-aside {
+			/* No sticky day nav to clear at ≥960px anymore; this offset keeps the map
+			   clear of the demo page's sticky "sample trip" banner. */
+			top: 72px;
 		}
 	}
 

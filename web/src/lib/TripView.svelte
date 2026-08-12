@@ -391,6 +391,11 @@
 	const budgetState = $derived(
 		budgetRatio === null ? 'none' : budgetRatio > 1 ? 'over' : budgetRatio > 0.8 ? 'warn' : 'ok'
 	);
+	// The bar is one glanceable line by default (label · spent of target · track);
+	// the exact remaining/over figure is the number you only want when you're
+	// actually deciding a purchase, so it's behind a tap. Collapsed by default
+	// because the hero sits above the itinerary on every phone screen.
+	let budgetOpen = $state(false);
 
 	interface FlatDay {
 		seg: Segment;
@@ -555,6 +560,68 @@
 			? `${dowShort(current.day.date, localeFor(trip, lang))} ${dayNum(current.day.date)} · ${L(current.day.title)}`
 			: ''
 	);
+	// Trip identity for that same stuck line. The hero's big title is the CURRENT
+	// SEGMENT's title and scrolls away; this is the trip's own title, so scrolling
+	// deep into a day never loses "which trip am I in" — and it costs no extra
+	// height, riding the line the day label already occupies.
+	const stuckTripTitle = $derived(L(trip.title));
+
+	// ── Swipe between days (touch) ──
+	// Below 960px the horizontal day strip is the only day switcher, and it lives
+	// at the top of the screen; a left/right swipe over the day body does the same
+	// thing under the thumb. Deliberately narrow so it never steals a gesture that
+	// belongs to something else: it ignores multi-touch, anything that starts
+	// inside a horizontally scrollable descendant (photo strips, the Day-Route
+	// rail, the day nav itself), and anything more vertical than horizontal.
+	// Off while editing, where a swipe is far more likely to be a text selection.
+	const SWIPE_MIN_PX = 60;
+	let swipeStartX = 0;
+	let swipeStartY = 0;
+	let swipeArmed = false;
+
+	/** True when the gesture began inside an element that scrolls horizontally on
+	 *  its own — that element owns the swipe, not the day switcher. */
+	function startsInHorizontalScroller(target: EventTarget | null): boolean {
+		let el = target instanceof Element ? target : null;
+		while (el) {
+			if (el.classList.contains('scroll-area')) return false;
+			if (el.scrollWidth > el.clientWidth + 1) {
+				const ox = getComputedStyle(el).overflowX;
+				if (ox === 'auto' || ox === 'scroll') return true;
+			}
+			el = el.parentElement;
+		}
+		return false;
+	}
+
+	function goDay(delta: number) {
+		const next = clampedIdx + delta;
+		if (next < 0 || next >= flatDays.length) return;
+		dayIdx = next;
+	}
+
+	function onSwipeStart(e: TouchEvent) {
+		if (edit || e.touches.length !== 1) {
+			swipeArmed = false;
+			return;
+		}
+		swipeStartX = e.touches[0].clientX;
+		swipeStartY = e.touches[0].clientY;
+		swipeArmed = !startsInHorizontalScroller(e.target);
+	}
+
+	function onSwipeEnd(e: TouchEvent) {
+		if (!swipeArmed) return;
+		swipeArmed = false;
+		const t = e.changedTouches[0];
+		if (!t) return;
+		const dx = t.clientX - swipeStartX;
+		const dy = t.clientY - swipeStartY;
+		// Clearly horizontal: past the distance floor AND at least twice as much
+		// horizontal as vertical, so a diagonal scroll flick never switches days.
+		if (Math.abs(dx) < SWIPE_MIN_PX || Math.abs(dx) < Math.abs(dy) * 2) return;
+		goDay(dx < 0 ? 1 : -1);
+	}
 
 	// ── "Now" marker on the timeline ──
 	// Ticks once a minute; a frozen `?now=` (see ./now) simply repeats the same
@@ -1012,16 +1079,34 @@
 			{/if}
 			{#if showBudget}
 				<div class="budget budget-{budgetState}">
-					<div class="budget-top">
-						<span class="budget-label">{uiText.budget}</span>
-						<span class="budget-figs">
-							<span class="budget-spent">{money(estTotal)}</span>
-							{#if trip.budget}
-								<span class="budget-of">{uiText.budgetOf} {money(trip.budget)}</span>
-							{/if}
-						</span>
-					</div>
 					{#if trip.budget}
+						<!-- With a target set there IS a detail figure to reveal, so the
+						     summary row is the disclosure control. -->
+						<button
+							class="budget-summary"
+							aria-expanded={budgetOpen}
+							aria-controls="budget-detail"
+							onclick={() => (budgetOpen = !budgetOpen)}
+						>
+							<span class="budget-label">{uiText.budget}</span>
+							<span class="budget-figs">
+								<span class="budget-spent">{money(estTotal)}</span>
+								<span class="budget-of">{uiText.budgetOf} {money(trip.budget)}</span>
+							</span>
+							<svg
+								class="budget-caret"
+								class:open={budgetOpen}
+								aria-hidden="true"
+								width="10"
+								height="10"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="3"
+							>
+								<path d="M6 9l6 6 6-6" />
+							</svg>
+						</button>
 						<div
 							class="budget-track"
 							role="progressbar"
@@ -1032,10 +1117,25 @@
 						>
 							<div class="budget-fill" style="width:{budgetPct}%"></div>
 						</div>
-						{@const delta = Math.abs((trip.budget ?? 0) - estTotal)}
-						<div class="budget-remain">
-							{money(delta)}
-							{budgetState === 'over' ? uiText.budgetOver : uiText.budgetLeft}
+						<div id="budget-detail">
+							{#if budgetOpen}
+								{@const delta = Math.abs((trip.budget ?? 0) - estTotal)}
+								<div
+									class="budget-remain"
+									transition:slide={{ duration: prefersReducedMotion.current ? 0 : 160 }}
+								>
+									{money(delta)}
+									{budgetState === 'over' ? uiText.budgetOver : uiText.budgetLeft}
+								</div>
+							{/if}
+						</div>
+					{:else}
+						<!-- No target: the running total is the whole story, nothing to expand. -->
+						<div class="budget-summary budget-summary-static">
+							<span class="budget-label">{uiText.budget}</span>
+							<span class="budget-figs">
+								<span class="budget-spent">{money(estTotal)}</span>
+							</span>
 						</div>
 					{/if}
 				</div>
@@ -1080,12 +1180,24 @@
 				class="daynav-context"
 				transition:slide={{ duration: prefersReducedMotion.current ? 0 : 180 }}
 			>
-				{stuckDayLabel}
+				<span class="dnc-trip">{stuckTripTitle}</span>
+				<span class="dnc-sep" aria-hidden="true">·</span>
+				<span class="dnc-day">{stuckDayLabel}</span>
 			</div>
 		{/if}
 	</nav>
 
-	<div class="scroll-area">
+	<!-- Touch-only day switching; the day strip above stays the visible, keyboard-
+	     and screen-reader-accessible control, so this adds no new requirement.
+	     Named group (same pattern as DayMap's map panel) so the swipe handlers sit
+	     on an element that actually announces what it contains. -->
+	<div
+		class="scroll-area"
+		role="group"
+		aria-label={stuckDayLabel || stuckTripTitle}
+		ontouchstart={onSwipeStart}
+		ontouchend={onSwipeEnd}
+	>
 		{#if current}
 			{@const seg = current.seg}
 			{@const plan = current.plan}
@@ -1351,7 +1463,9 @@
 			display: none;
 		}
 		.ics-btn {
-			width: 44px;
+			/* Square icon button. 30px visual, 44px hit area via the shared ::after
+			   (inset -7px on all four sides here, since these don't sit edge to edge). */
+			width: 30px;
 			padding: 0;
 			justify-content: center;
 		}
@@ -1368,12 +1482,21 @@
 			margin-left: 0;
 		}
 	}
+	/* ── Hero chrome sizing ──
+	   These controls used to be 44px tall so the CONTROL was the touch target.
+	   For a two-character language code that reads as a slab of chrome sitting
+	   above the trip title. The visual box is now 30px and each control carries a
+	   transparent ::after that expands the HIT area back past 44px, so the tap
+	   target is unchanged (WCAG 2.5.5 AAA still met) while the row costs 14px
+	   less on every phone screen. `position: relative` on the control anchors it;
+	   `.lang-toggle` must NOT clip (see below) or the expansion is cut off. */
 	.ics-btn {
 		display: inline-flex;
 		align-items: center;
 		gap: 5px;
 		padding: 4px 12px;
-		min-height: 44px;
+		min-height: 30px;
+		position: relative;
 		box-sizing: border-box;
 		border-radius: var(--radius-button);
 		border: 1px solid rgba(255, 255, 255, 0.18);
@@ -1385,6 +1508,11 @@
 		cursor: pointer;
 		text-decoration: none;
 	}
+	.ics-btn::after {
+		content: '';
+		position: absolute;
+		inset: -7px;
+	}
 	@media (hover: hover) {
 		.ics-btn:hover {
 			background: rgba(0, 0, 0, 0.3);
@@ -1394,12 +1522,15 @@
 	.lang-toggle {
 		display: flex;
 		border-radius: var(--radius-pill);
-		overflow: hidden;
 		border: 1px solid rgba(255, 255, 255, 0.18);
+		/* Deliberately NOT `overflow: hidden` (which is what used to round the
+		   ends): it would clip each button's ::after hit-area expansion back to
+		   the 30px visual box. The end buttons round themselves instead. */
 	}
 	.lang-btn {
 		padding: 4px 12px;
-		min-height: 44px;
+		min-height: 30px;
+		position: relative;
 		box-sizing: border-box;
 		display: inline-flex;
 		align-items: center;
@@ -1411,6 +1542,21 @@
 		color: rgba(255, 255, 255, 0.5);
 		font-family: inherit;
 		letter-spacing: 0.06em;
+	}
+	/* Only vertical expansion: neighbouring codes sit edge to edge, so growing
+	   the hit area sideways would overlap the other language's target. */
+	.lang-btn::after {
+		content: '';
+		position: absolute;
+		inset: -7px 0;
+	}
+	.lang-btn:first-child {
+		border-start-start-radius: var(--radius-pill);
+		border-end-start-radius: var(--radius-pill);
+	}
+	.lang-btn:last-child {
+		border-start-end-radius: var(--radius-pill);
+		border-end-end-radius: var(--radius-pill);
 	}
 	.lang-btn.on {
 		background: rgba(255, 255, 255, 0.18);
@@ -1502,31 +1648,63 @@
 	   white-on-dark hero palette (translucent white surfaces, a colour-coded
 	   fill). The traffic-light fill colour is driven by --budget-color, set by
 	   the state modifier class. */
+	/* Compact by default: one row (label · spent of target) over a hairline track.
+	   The exact remaining figure expands on tap — see `budgetOpen`. This was three
+	   stacked lines (~82px) in the hero, above the itinerary, on every phone. */
 	.budget {
-		margin-top: 10px;
+		margin-top: 8px;
 		background: rgba(255, 255, 255, 0.1);
 		border-radius: var(--radius-md);
-		padding: 8px 11px;
+		padding: 6px 11px 7px;
 		color: #fff;
 	}
-	.budget-top {
+	.budget-summary {
 		display: flex;
+		width: 100%;
 		justify-content: space-between;
 		align-items: baseline;
 		gap: 8px;
+		/* Reset: this is a button carrying a plain row of text. */
+		padding: 0;
+		border: none;
+		background: none;
+		color: inherit;
+		font-family: inherit;
+		text-align: left;
+		cursor: pointer;
+		position: relative;
+	}
+	/* The row is short; expand the tap target over the track and padding below it
+	   rather than making the row itself taller. */
+	.budget-summary::after {
+		content: '';
+		position: absolute;
+		inset: -6px -11px -13px;
+	}
+	.budget-summary-static {
+		cursor: default;
 	}
 	.budget-label {
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		font-size: 10px;
 		color: rgba(255, 255, 255, 0.7);
+		/* Shrink first (PT's "Orçamento da viagem" is ~2x the English label); the
+		   figures are the part that must never wrap. */
+		flex: 0 1 auto;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 	.budget-figs {
 		display: flex;
-		gap: 6px;
+		gap: 5px;
 		align-items: baseline;
 		font-size: 12px;
 		font-variant-numeric: tabular-nums;
+		flex: 0 0 auto;
+		margin-left: auto;
 	}
 	.budget-spent {
 		font-weight: 700;
@@ -1534,9 +1712,22 @@
 	.budget-of {
 		color: rgba(255, 255, 255, 0.7);
 	}
+	.budget-caret {
+		flex: 0 0 auto;
+		color: rgba(255, 255, 255, 0.55);
+		align-self: center;
+	}
+	.budget-caret.open {
+		transform: rotate(180deg);
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.budget-caret {
+			transition: transform 0.16s ease;
+		}
+	}
 	.budget-track {
-		margin-top: 7px;
-		height: 6px;
+		margin-top: 5px;
+		height: 3px;
 		border-radius: 999px;
 		background: rgba(255, 255, 255, 0.18);
 		overflow: hidden;
@@ -1552,7 +1743,7 @@
 		}
 	}
 	.budget-remain {
-		margin-top: 5px;
+		padding-top: 5px;
 		font-size: 10.5px;
 		color: rgba(255, 255, 255, 0.8);
 		font-variant-numeric: tabular-nums;
@@ -1608,20 +1799,45 @@
 		display: none;
 	}
 	/* Second line inside the day nav, revealed only once the nav is stuck to the
-	   top: the active day's weekday + title, ellipsized to a single line. Eyebrow
-	   styling, theme-tinted via --accent-text. Its slide/fade is reduced-motion
-	   gated in the markup (transition duration → 0). */
+	   top: the trip's own title + the active day's weekday and title, on ONE line.
+	   Eyebrow styling, theme-tinted via --accent-text. Its slide/fade is
+	   reduced-motion gated in the markup (transition duration → 0).
+
+	   Both halves ellipsize independently so neither can push the other out: the
+	   trip title is capped at 45% of the line (it's the stable, quickly-relearned
+	   half), and the day label — the part that actually changes as you scroll —
+	   takes whatever is left. */
 	.daynav-context {
+		display: flex;
+		align-items: baseline;
+		gap: 5px;
 		padding: 3px 12px 4px;
 		font-size: 10px;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--accent-text);
+		line-height: 1.3;
+		border-top: 1px solid var(--hairline);
+	}
+	.dnc-trip,
+	.dnc-day {
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		line-height: 1.3;
-		border-top: 1px solid var(--hairline);
+		min-width: 0;
+	}
+	.dnc-trip {
+		flex: 0 1 auto;
+		max-width: 45%;
+		font-weight: 600;
+	}
+	.dnc-sep {
+		flex: 0 0 auto;
+		opacity: 0.5;
+	}
+	.dnc-day {
+		flex: 1 1 auto;
+		opacity: 0.8;
 	}
 	.daybtn {
 		flex: 1 0 auto;
@@ -1714,6 +1930,20 @@
 	.scroll-area {
 		padding-bottom: 20px;
 	}
+
+	/* ── Tablets, foldables, split-screen (700–959px) ──
+	   The shell was pinned to a 430px column at EVERY width below 960px, so an
+	   iPad in portrait (768px), an unfolded foldable or a half-screen window
+	   rendered a phone-width strip with ~300px of dead margin on either side. The
+	   column fills the space here instead. TripDay switches to its two-pane day
+	   body at the same 700px breakpoint, so the width goes to the map rather than
+	   to over-long lines of body text — and the ≥960px rules below (full bleed,
+	   24px gutters, sidebar day rail) still take over from here unchanged. */
+	@media (min-width: 700px) {
+		.shell {
+			max-width: 900px;
+		}
+	}
 	.day-photos {
 		margin: 10px 13px 4px;
 		padding: 10px 12px;
@@ -1757,6 +1987,9 @@
 			padding-left: 24px;
 			padding-right: 24px;
 		}
+		/* The day strip is hidden up here, so its stuck context line can never
+		   render — but the trip title it carries is the sidebar's job at this width
+		   anyway. */
 		/* The unmatched-photos card shares the .day-photos class with the day-level
 		   card that now lives in TripDay, and inherited this margin from TripDay's
 		   desktop grid rules. Preserved verbatim so the extraction changes nothing

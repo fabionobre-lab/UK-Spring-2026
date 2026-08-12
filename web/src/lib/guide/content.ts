@@ -75,7 +75,8 @@ export const guide: GuideCatalog = {
 						body: [
 								'The read-through view of a trip: a day-by-day itinerary with times, places, notes and a map, grouped into segments. This is what you see when you open a trip, and what anyone you share it with sees too. On a phone, Print and Add to calendar live under More in the bottom bar; on a wider screen they sit in the trip header.',
 							"Each day also shows a weather forecast, when the trip is close enough in time for one to be available. For trips that have already happened, the editor can instead record the weather that actually happened, so the day still shows something useful.",
-							'Every stop the app can locate is numbered, and that number is the same in all three places it appears: on the dot beside the time, on the pin on the day map, and in the Day Route strip under it. Stop 5 is pin 5. A stop that has a Maps link but no map location is still numbered and still joins the route, it simply cannot be pinned — so pin numbers may skip. Set a missing location with Find place in the stop’s ⋮ panel.'
+							'Every stop the app can locate is numbered, and that number is the same in all three places it appears: on the dot beside the time, on the pin on the day map, and in the Day Route strip under it. Stop 5 is pin 5. A stop that has a Maps link but no map location is still numbered and still joins the route, it simply cannot be pinned — so pin numbers may skip. Set a missing location with Find place in the stop’s ⋮ panel.',
+							'To move between days, tap a date in the strip across the top, or swipe left and right anywhere on the day itself. The date strip stays pinned as you scroll and picks up a line naming the trip and the day you are on, so you never lose your place in a long day. On a wide screen the days move into the sidebar instead, and the day’s map and route sit beside the itinerary rather than above it.'
 						]
 					},
 					{
@@ -180,6 +181,7 @@ export const guide: GuideCatalog = {
 						title: 'Set a budget and track costs',
 						body: [
 							'Give a trip a currency and a total budget in Trip settings, then add an estimated cost — with an optional category (lodging, food, transport, activities, shopping or other) — to any stop in the block editor. Zarparia sums those into a per-day subtotal and a whole-trip total, shown against your budget as a colour-coded bar at the top of the trip: green while you have room, amber as you approach the limit, red once the estimate goes over.',
+							'The bar keeps to a single compact line at the top of the trip — the running total against your target, over a slim progress track. Tap it to expand exactly how much is left, or how far over the estimate has gone.',
 							"Because each alternative plan has its own stops, the total re-calculates when you switch plans — so you can compare what two versions of the same days would cost. If you set no budget but still add costs, the bar just shows the running total."
 						]
 					},
@@ -342,7 +344,8 @@ export const guide: GuideCatalog = {
 						body: [
 							'A visão de leitura de uma viagem: um roteiro dia a dia com horários, lugares, notas e um mapa, agrupado em trechos. No celular, Imprimir e Adicionar ao calendário ficam em Mais, na barra inferior; em telas maiores ficam no cabeçalho da viagem. É o que você vê ao abrir uma viagem, e o que qualquer pessoa com quem você a compartilha também vê.',
 							'Cada dia também mostra uma previsão do tempo, quando a viagem está próxima o suficiente para haver uma previsão disponível. Para viagens que já aconteceram, o editor pode registrar o tempo que realmente fez, para que o dia continue mostrando algo útil.',
-							'Toda parada que o app consegue localizar recebe um número, e é o mesmo número nos três lugares onde ele aparece: no ponto ao lado do horário, no pino do mapa do dia e na régua Rota do Dia embaixo dele. A parada 5 é o pino 5. Uma parada que tem link de mapa mas não tem local no mapa continua numerada e continua na rota, só não pode ser fixada — por isso os números dos pinos podem pular. Para definir o local que falta, use Encontrar lugar no painel ⋮ da parada.'
+							'Toda parada que o app consegue localizar recebe um número, e é o mesmo número nos três lugares onde ele aparece: no ponto ao lado do horário, no pino do mapa do dia e na régua Rota do Dia embaixo dele. A parada 5 é o pino 5. Uma parada que tem link de mapa mas não tem local no mapa continua numerada e continua na rota, só não pode ser fixada — por isso os números dos pinos podem pular. Para definir o local que falta, use Encontrar lugar no painel ⋮ da parada.',
+							'Para mudar de dia, toque numa data na régua do topo ou deslize para a esquerda e para a direita sobre o próprio dia. A régua de datas fica fixa enquanto você rola e ganha uma linha com o nome da viagem e o dia em que você está, para não se perder num dia longo. Em telas largas, os dias passam para a barra lateral, e o mapa e a rota do dia ficam ao lado do roteiro em vez de acima dele.'
 						]
 					},
 					{
@@ -447,6 +450,7 @@ export const guide: GuideCatalog = {
 						title: 'Definir um orçamento e acompanhar os custos',
 						body: [
 							'Dê à viagem uma moeda e um orçamento total nas configurações da viagem e, em seguida, adicione um custo estimado — com uma categoria opcional (hospedagem, alimentação, transporte, atividades, compras ou outros) — a qualquer parada no editor de blocos. O Zarparia soma tudo em um subtotal por dia e um total da viagem inteira, mostrados em relação ao seu orçamento como uma barra colorida no topo da viagem: verde enquanto há folga, âmbar ao se aproximar do limite, vermelho quando a estimativa passa.',
+							'A barra ocupa uma única linha compacta no topo da viagem — o total acumulado em relação à sua meta, sobre uma faixa fina de progresso. Toque nela para ver exatamente quanto ainda resta, ou o quanto a estimativa passou.',
 							'Como cada plano alternativo tem suas próprias paradas, o total é recalculado ao trocar de plano — assim você compara quanto custariam duas versões dos mesmos dias. Se você não definir um orçamento mas ainda adicionar custos, a barra apenas mostra o total acumulado.'
 						]
 					},

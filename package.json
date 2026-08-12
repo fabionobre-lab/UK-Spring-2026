@@ -5,6 +5,7 @@
   "scripts": {
     "deploy": "npm --prefix web run deploy",
     "build": "npm --prefix web run build",
+    "check": "npm --prefix web run check",
     "dev": "npm --prefix web run dev",
     "preview": "npm --prefix web run preview",
     "test": "npm --prefix web run test",

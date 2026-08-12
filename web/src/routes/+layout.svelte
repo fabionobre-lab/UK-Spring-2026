@@ -22,7 +22,6 @@
 	import '@fontsource/source-serif-4/latin-500.css';
 	import '@fontsource/source-serif-4/latin-600.css';
 	import '@fontsource/source-serif-4/latin-700.css';
-	import favicon from '$lib/assets/favicon.svg';
 	import { browser } from '$app/environment';
 	import { page, navigating } from '$app/state';
 	import { env as publicEnv } from '$env/dynamic/public';
@@ -193,7 +192,10 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<!-- The tab icon lives in app.html, pointing at static/favicon.svg — the
+	     family file. A bundled hashed copy here would drift from the other
+	     three apps' and would override app.html's link. -->
+
 	<meta name="description" content={og.description} />
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content="Zarparia" />

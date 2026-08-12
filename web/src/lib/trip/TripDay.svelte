@@ -5,23 +5,19 @@
 	//
 	// This is the `.day-content` grid — on desktop a two-column layout whose left
 	// column flows (header → timeline → photos → footer) beside a sticky right
-	// column (map, then route card). Extracted verbatim from TripView; the
-	// keyed day-switch fly transition moved onto this component's root.
+	// column (map, then route card). Extracted verbatim from TripView; the keyed
+	// day-switch entry animation lives on this component's parts (see the
+	// day-part-in keyframes in the style block).
 	//
 	// Anything derivable from `trip`/`lang`/`day` is derived here; state owned by
 	// TripView (the weather cache, wiki thumbnails, checklist persistence, the
 	// lightbox) arrives as props.
 	import { untrack } from 'svelte';
-	import { fly } from 'svelte/transition';
-	// Decelerating ease: fast off the mark, settling at rest — the motion curve a
-	// flick-then-release gesture implies. Linear reads mechanical at this distance.
-	import { cubicOut } from 'svelte/easing';
 	import { blankBlock, move as moveInArray } from '$lib/editor/factories';
 	import { dndzone, dndId, fromItems, grabHandle, FLIP_MS } from '$lib/editor/dnd';
 	import { t } from '$lib/i18n/store.svelte';
 	import { toast, dismissToast } from '$lib/toast';
 	import type { Block } from '$lib/trip-engine';
-	import { prefersReducedMotion } from 'svelte/motion';
 	import {
 		type Trip,
 		type Segment,
@@ -238,14 +234,17 @@
 	);
 </script>
 
-<div
-	class="day-content"
-	in:fly={{
-		x: prefersReducedMotion.current ? 0 : dir * 26,
-		duration: prefersReducedMotion.current ? 0 : 190,
-		easing: cubicOut
-	}}
->
+<!-- The day-switch entry is CSS, not a Svelte transition, and it animates the
+     PARTS rather than the pane. Three reasons it moved: the pieces can then
+     arrive on a stagger and travel different distances (the timeline nearest,
+     the map furthest back), which is what stops it reading as one rigid slab;
+     `{#key}` remounts this subtree so CSS animations replay for free; and it
+     leaves the drag-and-drop FLIP in edit mode completely alone. Dropping the
+     transform off the grid container also fixes a latent glitch — a transformed
+     ancestor becomes the containing block for `position: sticky`, so the desktop
+     map used to lose its pin for the length of the animation.
+     `--dir` carries the direction travelled into every keyframe below. -->
+<div class="day-content" style="--dir:{dir}">
 	<div class="day-hdr">
 		<div class="dh-in">
 			<div class="dh-eye">
@@ -444,6 +443,93 @@
 </div>
 
 <style>
+	/* ── Day-switch entry ──
+	   The day's parts assemble rather than sliding in as one block. Each part
+	   travels a different distance on the same directional axis — the timeline
+	   cards furthest (nearest the eye), the day header less, the map/route column
+	   least (furthest back) — which is what gives the switch depth instead of the
+	   flat slab feel of a single pane transform. On top of that the timeline
+	   cards arrive on a short stagger, so the day lays itself out in sequence.
+
+	   `--dir` (+1 forward through the trip, -1 back) is set inline on
+	   `.day-content`, so every part leans in from the side you came from.
+
+	   The easing lands with a hair of overshoot (the 1.02 on the last control
+	   point) — enough to read as settling into place rather than stopping dead,
+	   not enough to bounce.
+
+	   The whole block is gated behind `prefers-reduced-motion: no-preference`:
+	   with reduced motion no animation is declared at all, so the day simply
+	   appears — no delayed `both` fill to leave anything invisible. */
+	@media (prefers-reduced-motion: no-preference) {
+		@keyframes day-part-in {
+			from {
+				opacity: 0;
+				transform: translate3d(calc(var(--dir, 1) * var(--shift, 16px)), var(--rise, 6px), 0);
+			}
+			to {
+				opacity: 1;
+				transform: none;
+			}
+		}
+		.day-hdr,
+		.day-aside,
+		.day-photos,
+		.footer,
+		/* Read mode: the timeline's direct children ARE the stop cards (plus the
+		   "now" marker). While editing they are a single dnd zone + the add button,
+		   so the per-card stagger below simply doesn't apply and the drag FLIP is
+		   left untouched. */
+		.tl > :global(*) {
+			animation: day-part-in 300ms cubic-bezier(0.2, 0.9, 0.25, 1.02) both;
+		}
+		.day-hdr {
+			--shift: 14px;
+			--rise: 5px;
+			animation-delay: 0ms;
+		}
+		.day-aside {
+			/* Furthest back: moves least, arrives slowest. */
+			--shift: 7px;
+			--rise: 3px;
+			animation-duration: 360ms;
+			animation-delay: 30ms;
+		}
+		.tl > :global(*) {
+			--shift: 20px;
+			--rise: 8px;
+		}
+		/* Stagger, capped at the 7th card: beyond that everything is below the fold
+		   on a phone, and a longer tail would just make a 12-stop day feel slow. */
+		.tl > :global(*:nth-child(1)) {
+			animation-delay: 55ms;
+		}
+		.tl > :global(*:nth-child(2)) {
+			animation-delay: 85ms;
+		}
+		.tl > :global(*:nth-child(3)) {
+			animation-delay: 112ms;
+		}
+		.tl > :global(*:nth-child(4)) {
+			animation-delay: 136ms;
+		}
+		.tl > :global(*:nth-child(5)) {
+			animation-delay: 157ms;
+		}
+		.tl > :global(*:nth-child(6)) {
+			animation-delay: 174ms;
+		}
+		.tl > :global(*:nth-child(n + 7)) {
+			animation-delay: 188ms;
+		}
+		.day-photos,
+		.footer {
+			--shift: 12px;
+			--rise: 5px;
+			animation-delay: 200ms;
+		}
+	}
+
 	.day-hdr {
 		margin: 10px 13px 0;
 		background: var(--hero-bg);

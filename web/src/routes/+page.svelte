@@ -1,5 +1,6 @@
 <script lang="ts">
 	import BottomBar from '$lib/nav/BottomBar.svelte';
+	import type { IconName } from '$lib/nav/NavIcon.svelte';
 	import AuthEmailForm from './AuthEmailForm.svelte';
 	import EmptyState from '$lib/ui/empty/EmptyState.svelte';
 	import { firebaseEnabled } from '$lib/firebase';
@@ -97,6 +98,17 @@
 	// Phase 1 (legal pack): consent line under the Google sign-in button. The
 	// %TERMS%/%PRIVACY% tokens in the message are swapped for real <a> links to
 	// /terms and /privacy below, instead of injecting raw HTML.
+	// Paste-import is only offered when the server has an Anthropic key
+	// (data.importEnabled, from +layout.server.ts) — otherwise the bar would
+	// carry a tab that dead-ends in "Import isn't set up on this server yet".
+	const barItems = $derived([
+		{ id: 'trips', label: t('nav.trips'), icon: 'trips' as IconName, href: '/', current: true },
+		{ id: 'new', label: t('nav.newTrip'), icon: 'newTrip' as IconName, href: '/trips/new' },
+		...(data.importEnabled
+			? [{ id: 'import', label: t('nav.import'), icon: 'import' as IconName, href: '/trips/import' }]
+			: [])
+	]);
+
 	const consentParts = $derived(t('landing.consentText').split(/(%TERMS%|%PRIVACY%)/));
 
 	// Sign-in vs request-access (vs reset) mode for the email form. Owned here so
@@ -211,7 +223,9 @@
 		<div class="head">
 			<h1>{t('home.yourTrips')}</h1>
 			<div class="actions">
-				<a class="import-btn" href="/trips/import">{t('home.importItinerary')}</a>
+				{#if data.importEnabled}
+					<a class="import-btn" href="/trips/import">{t('home.importItinerary')}</a>
+				{/if}
 				<a class="new" href="/trips/new">{t('home.newTrip')}</a>
 			</div>
 		</div>
@@ -242,8 +256,10 @@
 			<EmptyState kind="trips">
 				<p>{t('home.noTrips')} <a href="/trips/new">{t('home.createFirst')}</a></p>
 				<div class="empty-links">
-					<a href="/trips/import">{t('home.importItinerary')}</a>
-					<span aria-hidden="true">·</span>
+					{#if data.importEnabled}
+						<a href="/trips/import">{t('home.importItinerary')}</a>
+						<span aria-hidden="true">·</span>
+					{/if}
 					<a href="/demo">{t('landing.tryDemo')}</a>
 					<span aria-hidden="true">·</span>
 					<a href="/guide">{t('home.readGuide')}</a>
@@ -262,14 +278,7 @@
 			</div>
 		{/if}
 
-		<BottomBar
-			user={data.user}
-			items={[
-				{ id: 'trips', label: t('nav.trips'), icon: 'trips', href: '/', current: true },
-				{ id: 'new', label: t('nav.newTrip'), icon: 'newTrip', href: '/trips/new' },
-				{ id: 'import', label: t('nav.import'), icon: 'import', href: '/trips/import' }
-			]}
-		/>
+		<BottomBar user={data.user} items={barItems} />
 	{:else}
 		<div class="auth-shell">
 			<div class="auth-card">

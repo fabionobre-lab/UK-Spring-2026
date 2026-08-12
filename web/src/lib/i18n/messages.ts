@@ -436,6 +436,9 @@ export interface Messages {
 	'import.errTooLong': string;
 	'import.errEmpty': string;
 	'import.err422': string;
+	// Shown in place of the paste box when the server has no Anthropic key.
+	'import.unavailableBody': string;
+	'import.unavailableCta': string;
 
 	// ── Join / invite pages (join/[token]/+page.svelte) ──
 	'join.pageTitle': string;
@@ -1024,6 +1027,9 @@ const enGB: Messages = {
 	'import.errTooLong': 'That itinerary is too long. Please shorten it and try again.',
 	'import.errEmpty': 'Paste an itinerary to import.',
 	'import.err422': "We couldn't turn that into a trip.",
+	'import.unavailableBody':
+		"Pasting an itinerary isn't available right now. You can still get the same thing from the Zarparia connector in your own Claude app — it builds a full trip for you, and it doesn't depend on this page.",
+	'import.unavailableCta': 'How the connector works →',
 
 	'join.pageTitle': 'Join trip — Zarparia',
 	'join.signInHeading': 'Sign in to open this invite',
@@ -1611,6 +1617,9 @@ const ptBR: Messages = {
 	'import.errTooLong': 'Esse roteiro é muito longo. Encurte-o e tente novamente.',
 	'import.errEmpty': 'Cole um roteiro para importar.',
 	'import.err422': 'Não conseguimos transformar isso em uma viagem.',
+	'import.unavailableBody':
+		'Colar um roteiro não está disponível no momento. Você ainda consegue o mesmo resultado pelo conector do Zarparia no seu próprio aplicativo Claude — ele monta a viagem inteira para você e não depende desta página.',
+	'import.unavailableCta': 'Como funciona o conector →',
 
 	'join.pageTitle': 'Participar da viagem — Zarparia',
 	'join.signInHeading': 'Entre para abrir este convite',

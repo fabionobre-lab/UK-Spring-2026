@@ -65,34 +65,46 @@
 <main>
 	<a class="back" href="/">{t('import.back')}</a>
 	<h1>{t('import.heading')}</h1>
-	<p class="lede">
-		{t('import.lede')}
-	</p>
 
-	<textarea
-		bind:value={text}
-		placeholder={PLACEHOLDER}
-		rows="12"
-		disabled={busy}
-		aria-label={t('import.textareaAria')}
-	></textarea>
+	{#if !data.enabled}
+		<!-- No ANTHROPIC_API_KEY on this server: every import would 501. The entry
+		     points are hidden, but this route is still reachable by bookmark and
+		     from /guide, so explain up front and point at the connector, which
+		     does the same job using the reader's own Claude app. -->
+		<p class="lede">{t('import.unavailableBody')}</p>
+		<p class="unavailable-cta"><a href="/guide#mcp">{t('import.unavailableCta')}</a></p>
+	{:else}
+		<p class="lede">
+			{t('import.lede')}
+		</p>
 
-	<div class="row">
-		<span class="counter" class:over={tooLong}>{text.length.toLocaleString()} / {MAX.toLocaleString()}</span>
-		<button class="import" onclick={submit} disabled={!canSubmit}>
-			{busy ? t('import.reading') : t('import.importBtn')}
-		</button>
-	</div>
+		<textarea
+			bind:value={text}
+			placeholder={PLACEHOLDER}
+			rows="12"
+			disabled={busy}
+			aria-label={t('import.textareaAria')}
+		></textarea>
 
-	{#if busy}
-		<p class="working">{t('import.readingLong')}</p>
-	{/if}
-
-	{#if error}
-		<div class="error" role="alert">
-			<p>{error}</p>
-			{#if hint}<p class="hint">{hint}</p>{/if}
+		<div class="row">
+			<span class="counter" class:over={tooLong}
+				>{text.length.toLocaleString()} / {MAX.toLocaleString()}</span
+			>
+			<button class="import" onclick={submit} disabled={!canSubmit}>
+				{busy ? t('import.reading') : t('import.importBtn')}
+			</button>
 		</div>
+
+		{#if busy}
+			<p class="working">{t('import.readingLong')}</p>
+		{/if}
+
+		{#if error}
+			<div class="error" role="alert">
+				<p>{error}</p>
+				{#if hint}<p class="hint">{hint}</p>{/if}
+			</div>
+		{/if}
 	{/if}
 </main>
 
@@ -118,6 +130,10 @@
 	.lede {
 		color: var(--text-muted);
 		margin: 0 0 1.25rem;
+	}
+	.unavailable-cta {
+		margin: 0;
+		font-size: 0.9rem;
 	}
 	textarea {
 		width: 100%;

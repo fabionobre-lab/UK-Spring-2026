@@ -57,7 +57,7 @@ Rules:
 - Language: use a single language "en". Set "languages": ["en"] and "defaultLanguage": "en". Every localized field is an object like { "en": "..." }. Only introduce another language if the source text is itself written in (or explicitly asks for) another language.
 - Structure: segments[] -> each segment has plans[] -> each plan has days[] -> each day has blocks[]. Give every segment exactly one plan with id "main" unless the text genuinely describes alternative plans.
 - Segments: group the trip by city / region / leg (typically one segment per place the traveler stays), ordered by travel order.
-- ids: every "id" is a URL-safe slug of its title (lowercase, words joined by hyphens; segment and plan ids may also use underscores). The top-level trip "id" is a slug of the trip title.
+- ids: the top-level trip "id", segment ids and plan ids are URL-safe slugs of their titles (lowercase, words joined by hyphens; segment and plan ids may also use underscores). Do NOT set an "id" on a day or a block: those ids are opaque identifiers minted server-side on save, and a slug like "rome-day-1" fails validation.
 - Dates: ISO "YYYY-MM-DD". Infer a plausible date for each day from arrival dates, stated durations, months, and seasons. If the year is not stated, infer it from today's date and the described season.
 - Days: each day needs a "date", a short "title" (e.g. { "en": "Rome - Day 1" }) and at least one block.
 - Blocks: each block needs at minimum a "time" and a "title". "time" may be a clock time ("09:00") or a part of day ("Morning"). Add a "description" when the text provides detail. Infer sensible times and ordering when the text implies a sequence.

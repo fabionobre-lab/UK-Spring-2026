@@ -194,12 +194,16 @@
 
 	{#if moreRows.length > 0}<div class="sheet-divider" role="separator"></div>{/if}
 
+	<!-- The <a> rows below deliberately do NOT close the sheet themselves any
+	     more: MoreSheet's beforeNavigate does it, and does it without rewinding
+	     the history entry the sheet pushed for the Back gesture. Closing here as
+	     well raced that rewind against the navigation it was starting. -->
 	{#if showFeedback}
 		<button type="button" class="sheet-row" onclick={openFeedback}>
 			<NavIcon name="feedback" />
 			<span class="sheet-label">{t('feedback.button')}</span>
 		</button>
-		<a class="sheet-row" href="/account" onclick={() => (moreOpen = false)}>
+		<a class="sheet-row" href="/account">
 			<svg
 				class="mode-icon"
 				aria-hidden="true"
@@ -220,7 +224,7 @@
 	{/if}
 
 	{#if admin}
-		<a class="sheet-row" href="/admin/approvals" onclick={() => (moreOpen = false)}>
+		<a class="sheet-row" href="/admin/approvals">
 			<svg
 				class="mode-icon"
 				aria-hidden="true"
@@ -241,7 +245,7 @@
 		</a>
 	{/if}
 
-	<a class="sheet-row" href="/guide" onclick={() => (moreOpen = false)}>
+	<a class="sheet-row" href="/guide">
 		<NavIcon name="guide" />
 		<span class="sheet-label">{t('nav.guide')}</span>
 	</a>

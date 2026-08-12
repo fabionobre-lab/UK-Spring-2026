@@ -4,7 +4,9 @@
 	// open, Escape and a scrim tap both close it, and body scroll is locked so
 	// the page behind doesn't move. Motion respects prefers-reduced-motion via a
 	// CSS media query (the transform/opacity transitions simply drop out).
-	import type { Snippet } from 'svelte';
+	import { untrack, type Snippet } from 'svelte';
+	import { pushState, beforeNavigate } from '$app/navigation';
+	import { page } from '$app/state';
 	import NavIcon from './NavIcon.svelte';
 
 	let {
@@ -34,6 +36,50 @@
 	function close() {
 		open = false;
 	}
+
+	// ── Android/browser Back dismisses the sheet ──
+	// Without this, Back leaves the page entirely while a menu is sitting open,
+	// which is not what the gesture means to anyone. Opening pushes a throwaway
+	// history entry (SvelteKit shallow routing — same URL, a flag in page.state)
+	// for Back to consume; when the flag disappears we know Back was pressed and
+	// close. Dismissing any other way rewinds that entry, so the stack is left
+	// exactly as it was found and Back still leaves the page on the next press.
+	//
+	// One effect owns all of it: splitting push/close/rewind across several
+	// effects means each one writing a dependency of the others, which is how
+	// this pattern turns into a loop. `entryPushed` tracks whether the entry
+	// currently in the stack is OURS.
+	let entryPushed = false;
+	// Set when the sheet is closing because the app is navigating away, rather
+	// than because it was dismissed. Rewinding then would fight the navigation
+	// that is already in flight.
+	let skipRewind = false;
+
+	beforeNavigate(() => {
+		if (!untrack(() => open)) return;
+		skipRewind = true;
+		open = false;
+	});
+
+	$effect(() => {
+		const wantOpen = open;
+		const flagged = !!page.state.moreSheet;
+		untrack(() => {
+			if (wantOpen && !entryPushed) {
+				entryPushed = true;
+				pushState('', { ...page.state, moreSheet: true });
+			} else if (wantOpen && entryPushed && !flagged) {
+				// Our entry went away while we are still open: Back was pressed.
+				// Nothing to rewind — the gesture already did it.
+				entryPushed = false;
+				open = false;
+			} else if (!wantOpen && entryPushed) {
+				entryPushed = false;
+				if (!skipRewind && flagged) history.back();
+				skipRewind = false;
+			}
+		});
+	});
 
 	function focusables(): HTMLElement[] {
 		if (!panelEl) return [];

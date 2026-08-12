@@ -594,10 +594,27 @@
 		return false;
 	}
 
+	// ── Day-change direction ──
+	// Which way the day body slides in. The transition used to be a fixed 8px
+	// vertical rise, identical whether you moved forward or back — which reads
+	// wrong under a swipe, where the thumb travels horizontally and the content
+	// answered vertically. Every navigation route (swipe, a tap on the date
+	// strip, the desktop rail) goes through goToDay() so the motion always
+	// matches the direction actually travelled.
+	let dayDir = $state<1 | -1>(1);
+
+	/** Navigate to a day by absolute index, recording the direction travelled.
+	 *  Structural editor operations still assign `dayIdx` directly — they are
+	 *  edits rather than navigation, and inherit whatever direction was last set. */
+	function goToDay(next: number) {
+		const clamped = Math.max(0, Math.min(next, flatDays.length - 1));
+		if (clamped === clampedIdx) return;
+		dayDir = clamped > clampedIdx ? 1 : -1;
+		dayIdx = clamped;
+	}
+
 	function goDay(delta: number) {
-		const next = clampedIdx + delta;
-		if (next < 0 || next >= flatDays.length) return;
-		dayIdx = next;
+		goToDay(clampedIdx + delta);
 	}
 
 	function onSwipeStart(e: TouchEvent) {
@@ -958,7 +975,7 @@
 				}))
 			})),
 			selectDay: (gi: number) => {
-				dayIdx = gi;
+				goToDay(gi);
 			},
 			selectPlan: (segId: string, planId: string) => {
 				const seg = trip.segments.find((s) => s.id === segId);
@@ -1159,7 +1176,7 @@
 						class:has-bday={!!L(day.banner)}
 						aria-current={on ? 'date' : undefined}
 						aria-label={label}
-						onclick={() => (dayIdx = gi)}
+						onclick={() => goToDay(gi)}
 						bind:this={dayBtnEls[gi]}
 					>
 						<span class="dow">{dowShort(day.date, localeFor(trip, lang))}</span>
@@ -1209,6 +1226,7 @@
 					{seg}
 					{plan}
 					{day}
+					dir={dayDir}
 					wx={daySummary(seg, day)}
 					{isToday}
 					{nowMarkerIdx}

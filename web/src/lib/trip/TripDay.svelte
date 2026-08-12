@@ -13,6 +13,9 @@
 	// lightbox) arrives as props.
 	import { untrack } from 'svelte';
 	import { fly } from 'svelte/transition';
+	// Decelerating ease: fast off the mark, settling at rest — the motion curve a
+	// flick-then-release gesture implies. Linear reads mechanical at this distance.
+	import { cubicOut } from 'svelte/easing';
 	import { blankBlock, move as moveInArray } from '$lib/editor/factories';
 	import { dndzone, dndId, fromItems, grabHandle, FLIP_MS } from '$lib/editor/dnd';
 	import { t } from '$lib/i18n/store.svelte';
@@ -52,6 +55,7 @@
 		seg,
 		plan,
 		day,
+		dir = 1,
 		wx = null,
 		isToday = false,
 		nowMarkerIdx = null,
@@ -87,6 +91,11 @@
 		seg: Segment;
 		plan: Plan;
 		day: Day;
+		/** Direction the day body slides in from: +1 when moving forward through
+		 *  the trip, -1 when moving back. Set by every navigation route in
+		 *  TripView (swipe, date strip, desktop rail) so the motion answers the
+		 *  gesture instead of playing the same way in both directions. */
+		dir?: 1 | -1;
 		/** Day weather summary from TripView's fetch cache, or null. */
 		wx?: { emoji: string; hi: number; lo: number } | null;
 		isToday?: boolean;
@@ -232,8 +241,9 @@
 <div
 	class="day-content"
 	in:fly={{
-		y: prefersReducedMotion.current ? 0 : 8,
-		duration: prefersReducedMotion.current ? 0 : 180
+		x: prefersReducedMotion.current ? 0 : dir * 26,
+		duration: prefersReducedMotion.current ? 0 : 190,
+		easing: cubicOut
 	}}
 >
 	<div class="day-hdr">

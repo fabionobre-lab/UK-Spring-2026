@@ -43,6 +43,13 @@
 	} = $props();
 
 	let moreOpen = $state(false);
+	// Measured bar height, handed to the sheet so it can sit on top of the bar
+	// instead of over it. Reads 0 wherever the bar is display:none (the
+	// keyboard-open state, and every width >=960px), which is the offset those
+	// cases want anyway — so no breakpoint duplication in the sheet.
+	// offsetHeight, not clientHeight: the latter excludes the bar's 1px border-top,
+	// which left the panel overlapping the bar by exactly that pixel.
+	let barH = $state(0);
 	let feedbackOpen = $state(false);
 
 	// Advertise our presence to other fixed-bottom chrome (the Toast region
@@ -142,17 +149,26 @@
 	{/if}
 {/snippet}
 
-<nav class="bottom-bar" class:hidden={keyboardOpen} aria-label={t('nav.primaryLabel')}>
+<nav
+	class="bottom-bar"
+	class:hidden={keyboardOpen}
+	bind:offsetHeight={barH}
+	aria-label={t('nav.primaryLabel')}
+>
 	{#each items as it (it.id)}
 		{@render barItem(it)}
 	{/each}
+	<!-- Toggles, which is what aria-expanded already promises. It used to only
+	     ever set true — harmless while the open sheet covered the bar and made
+	     this button unreachable, but the sheet now clears the bar, so a second
+	     tap has to do the obvious thing. -->
 	<button
 		type="button"
 		class="bar-item"
 		class:current={moreOpen}
 		aria-haspopup="dialog"
 		aria-expanded={moreOpen}
-		onclick={() => (moreOpen = true)}
+		onclick={() => (moreOpen = !moreOpen)}
 	>
 		<NavIcon name="more" />
 		<span class="bar-label">{t('nav.more')}</span>
@@ -163,7 +179,12 @@
      scroll clear of the fixed bar. Collapses to nothing at >=960px. -->
 <div class="bar-spacer" aria-hidden="true"></div>
 
-<MoreSheet bind:open={moreOpen} label={t('nav.moreLabel')} closeLabel={t('nav.close')}>
+<MoreSheet
+	bind:open={moreOpen}
+	label={t('nav.moreLabel')}
+	closeLabel={t('nav.close')}
+	bottomOffset={barH}
+>
 	{#each moreRows as r (r.id)}
 		<button type="button" class="sheet-row" onclick={() => runRow(r.onclick)}>
 			<NavIcon name={r.icon} />

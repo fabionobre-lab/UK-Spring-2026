@@ -43,6 +43,13 @@
 	} = $props();
 
 	let moreOpen = $state(false);
+	// Measured bar height, handed to the sheet so it can sit on top of the bar
+	// instead of over it. Reads 0 wherever the bar is display:none (the
+	// keyboard-open state, and every width >=960px), which is the offset those
+	// cases want anyway — so no breakpoint duplication in the sheet.
+	// offsetHeight, not clientHeight: the latter excludes the bar's 1px border-top,
+	// which left the panel overlapping the bar by exactly that pixel.
+	let barH = $state(0);
 	let feedbackOpen = $state(false);
 
 	// Advertise our presence to other fixed-bottom chrome (the Toast region
@@ -142,17 +149,26 @@
 	{/if}
 {/snippet}
 
-<nav class="bottom-bar" class:hidden={keyboardOpen} aria-label={t('nav.primaryLabel')}>
+<nav
+	class="bottom-bar"
+	class:hidden={keyboardOpen}
+	bind:offsetHeight={barH}
+	aria-label={t('nav.primaryLabel')}
+>
 	{#each items as it (it.id)}
 		{@render barItem(it)}
 	{/each}
+	<!-- Toggles, which is what aria-expanded already promises. It used to only
+	     ever set true — harmless while the open sheet covered the bar and made
+	     this button unreachable, but the sheet now clears the bar, so a second
+	     tap has to do the obvious thing. -->
 	<button
 		type="button"
 		class="bar-item"
 		class:current={moreOpen}
 		aria-haspopup="dialog"
 		aria-expanded={moreOpen}
-		onclick={() => (moreOpen = true)}
+		onclick={() => (moreOpen = !moreOpen)}
 	>
 		<NavIcon name="more" />
 		<span class="bar-label">{t('nav.more')}</span>
@@ -163,7 +179,12 @@
      scroll clear of the fixed bar. Collapses to nothing at >=960px. -->
 <div class="bar-spacer" aria-hidden="true"></div>
 
-<MoreSheet bind:open={moreOpen} label={t('nav.moreLabel')} closeLabel={t('nav.close')}>
+<MoreSheet
+	bind:open={moreOpen}
+	label={t('nav.moreLabel')}
+	closeLabel={t('nav.close')}
+	bottomOffset={barH}
+>
 	{#each moreRows as r (r.id)}
 		<button type="button" class="sheet-row" onclick={() => runRow(r.onclick)}>
 			<NavIcon name={r.icon} />
@@ -173,12 +194,16 @@
 
 	{#if moreRows.length > 0}<div class="sheet-divider" role="separator"></div>{/if}
 
+	<!-- The <a> rows below deliberately do NOT close the sheet themselves any
+	     more: MoreSheet's beforeNavigate does it, and does it without rewinding
+	     the history entry the sheet pushed for the Back gesture. Closing here as
+	     well raced that rewind against the navigation it was starting. -->
 	{#if showFeedback}
 		<button type="button" class="sheet-row" onclick={openFeedback}>
 			<NavIcon name="feedback" />
 			<span class="sheet-label">{t('feedback.button')}</span>
 		</button>
-		<a class="sheet-row" href="/account" onclick={() => (moreOpen = false)}>
+		<a class="sheet-row" href="/account">
 			<svg
 				class="mode-icon"
 				aria-hidden="true"
@@ -199,7 +224,7 @@
 	{/if}
 
 	{#if admin}
-		<a class="sheet-row" href="/admin/approvals" onclick={() => (moreOpen = false)}>
+		<a class="sheet-row" href="/admin/approvals">
 			<svg
 				class="mode-icon"
 				aria-hidden="true"
@@ -220,7 +245,7 @@
 		</a>
 	{/if}
 
-	<a class="sheet-row" href="/guide" onclick={() => (moreOpen = false)}>
+	<a class="sheet-row" href="/guide">
 		<NavIcon name="guide" />
 		<span class="sheet-label">{t('nav.guide')}</span>
 	</a>

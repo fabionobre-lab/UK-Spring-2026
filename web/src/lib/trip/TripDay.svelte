@@ -460,7 +460,14 @@
 
 	   The whole block is gated behind `prefers-reduced-motion: no-preference`:
 	   with reduced motion no animation is declared at all, so the day simply
-	   appears — no delayed `both` fill to leave anything invisible. */
+	   appears — no delayed backwards fill to leave anything invisible.
+
+	   Fill mode is `backwards`, NOT `both`/`forwards`: the `to` state equals the
+	   natural state anyway, and a forwards fill leaves a permanent computed
+	   identity transform on every part. In edit mode one of those parts is the
+	   `.tl-dnd` drop zone itself, and svelte-dnd-action's transform-stripping
+	   rect math returns NaN bounds for any zone with a computed transform —
+	   which silently kills drag-and-drop (the card drags but can never drop). */
 	@media (prefers-reduced-motion: no-preference) {
 		@keyframes day-part-in {
 			from {
@@ -481,7 +488,7 @@
 		   so the per-card stagger below simply doesn't apply and the drag FLIP is
 		   left untouched. */
 		.tl > :global(*) {
-			animation: day-part-in 300ms cubic-bezier(0.2, 0.9, 0.25, 1.02) both;
+			animation: day-part-in 300ms cubic-bezier(0.2, 0.9, 0.25, 1.02) backwards;
 		}
 		.day-hdr {
 			--shift: 14px;
